@@ -52,7 +52,7 @@ export class InlineCompletion {
      * Set whenever a document has active inline recommendations
      */
     private isInlineActive = false
-
+    private inlineProvider: vscode.Disposable | undefined = undefined
     constructor() {
         this.items = []
         this.origin = []
@@ -326,12 +326,7 @@ export class InlineCompletion {
         RecommendationHandler.instance.clearRecommendations()
         this.setCodeWhispererStatusBarLoading()
         const isManualTrigger = triggerType === 'OnDemand'
-        this.startShowRecommendationTimer(
-            isManualTrigger,
-            CodeWhispererConstants.suggestionShowDelay,
-            this._pollPeriod,
-            editor
-        )
+        this.startNativeRecoTimer(isManualTrigger, CodeWhispererConstants.suggestionShowDelay, this._pollPeriod, editor)
         let page = 0
         RecommendationHandler.instance.checkAndResetCancellationTokens()
         this.documentUri = editor.document.uri
@@ -347,6 +342,7 @@ export class InlineCompletion {
                     page
                 )
                 this.setCompletionItems(editor)
+                getLogger().error(`Page: ${page}`)
                 if (RecommendationHandler.instance.checkAndResetCancellationTokens()) {
                     RecommendationHandler.instance.reportUserDecisionOfCurrentRecommendation(editor, -1)
                     RecommendationHandler.instance.clearRecommendations()
@@ -360,6 +356,94 @@ export class InlineCompletion {
         }
         this.setCodeWhispererStatusBarOk()
     }
+
+    private async startNativeRecoTimer(
+        isManualTrigger: boolean,
+        showSuggestionDelay: number,
+        pollPeriod: number,
+        editor: vscode.TextEditor
+    ): Promise<void> {
+        if (this._timer !== undefined) {
+            return
+        }
+        let previousItemLength = this.items.length
+
+        this._timer = globals.clock.setTimeout(async () => {
+            const delay = performance.now() - vsCodeState.lastUserModificationTime
+            if (delay < showSuggestionDelay) {
+                this._timer?.refresh()
+            } else {
+                // do not show recommendation if cursor is before invocation position
+                // and cancel paginated request
+                if (editor.selection.active.isBefore(RecommendationHandler.instance.startPos)) {
+                    if (this._timer !== undefined) {
+                        clearTimeout(this._timer)
+                        this._timer = undefined
+                    }
+                    RecommendationHandler.instance.cancelPaginatedRequest()
+                    return
+                }
+                this.setCompletionItems(editor)
+                if (this.items.length > 0) {
+                    if (previousItemLength !== this.items.length) {
+                        const provider: vscode.InlineCompletionItemProvider = {
+                            provideInlineCompletionItems: async (document, position, context, token) => {
+                                if (position.line < 0) {
+                                    return
+                                }
+                                const start = position
+                                const end = position
+                                const items = this.items.map(i => {
+                                    return {
+                                        insertText: i.content,
+                                        range: new vscode.Range(start, end),
+                                        someTrackingId: 0,
+                                    }
+                                })
+                                return items
+                            },
+                        }
+                        if (this.inlineProvider !== undefined) {
+                            this.inlineProvider.dispose()
+                        }
+                        this.inlineProvider = vscode.languages.registerInlineCompletionItemProvider(
+                            { pattern: '**' },
+                            provider
+                        )
+                        if (previousItemLength === 0) {
+                            await vscode.commands.executeCommand(`editor.action.inlineSuggest.trigger`)
+                        }
+                        previousItemLength = this.items.length
+                    }
+
+                    if (!this.isPaginationRunning() && this._timer !== undefined) {
+                        clearTimeout(this._timer)
+                        this._timer = undefined
+                        getLogger().error(`Timer Cleared`)
+                    } else {
+                        this._timer?.refresh()
+                    }
+                } else {
+                    if (this.isPaginationRunning()) {
+                        this._timer?.refresh()
+                    } else {
+                        if (this._timer !== undefined) {
+                            clearTimeout(this._timer)
+                            this._timer = undefined
+                            if (isManualTrigger) {
+                                if (RecommendationHandler.instance.errorMessagePrompt !== '') {
+                                    showTimedMessage(RecommendationHandler.instance.errorMessagePrompt, 2000)
+                                } else {
+                                    showTimedMessage(CodeWhispererConstants.noSuggestions, 2000)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }, pollPeriod)
+    }
+
     /*
      * This startShowRecommendationTimer function is to enforce CodeWhisperer to only show recommendation
      * after a delay since user last keystroke input
