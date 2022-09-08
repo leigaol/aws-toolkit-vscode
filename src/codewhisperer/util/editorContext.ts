@@ -34,27 +34,22 @@ export function extractContextForCodeWhisperer(editor: vscode.TextEditor): codew
         )
     )
 
-    if (editorFileContext.filename.includes('ipynb')) {
-        const visibleEditors = vscode.window.visibleTextEditors
-        const notebookEditors: vscode.TextEditor[] = []
-        visibleEditors.forEach(e => {
-            if (e.document.fileName === editor.document.fileName) {
-                notebookEditors.push(e)
-            }
-        })
+    if (editorFileContext.filename.includes('ipynb') && vscode.window.activeNotebookEditor) {
+        const e = vscode.window.activeNotebookEditor
+        const curCellIndex = e.selection.start
         caretLeftFileContext = ''
-        const k = notebookEditors.indexOf(editor)
         getLogger().debug(
-            `Getting context for Jupyter Notebook, found ${visibleEditors.length} cells, current is ${k + 1}-th cell`
+            `Getting context for Jupyter Notebook, found ${e.notebook.cellCount} cells, current cell index ${curCellIndex}`
         )
-        for (let i = 0; i < k; i++) {
-            const e = notebookEditors[i]
-            if (e.document.languageId === 'markdown') {
-                caretLeftFileContext += `\n"""\n${e.document.getText()}\n"""\n`
-            } else if (e.document.languageId === 'python') {
-                caretLeftFileContext += `\n${e.document.getText()}\n`
+        for (let i = 0; i < curCellIndex; i++) {
+            const d = e.notebook.cellAt(i)
+            if (d.kind === 1) {
+                caretLeftFileContext += `\n${d.document.getText()}\n`
+            } else if (d.kind === 2) {
+                caretLeftFileContext += `\n${d.document.getText()}\n`
             }
         }
+
         caretLeftFileContext += editor.document.getText(
             new vscode.Range(
                 document.positionAt(offset - CodeWhispererConstants.charactersLimit),
