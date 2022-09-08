@@ -44,9 +44,9 @@ export function extractContextForCodeWhisperer(editor: vscode.TextEditor): codew
         for (let i = 0; i < curCellIndex; i++) {
             const d = e.notebook.cellAt(i)
             if (d.kind === 1) {
-                caretLeftFileContext += `\n${d.document.getText()}\n`
+                caretLeftFileContext += `"""\n${d.document.getText()}\n"""\n`
             } else if (d.kind === 2) {
-                caretLeftFileContext += `\n${d.document.getText()}\n`
+                caretLeftFileContext += `${d.document.getText()}\n`
             }
         }
 
