@@ -27,12 +27,43 @@ export function extractContextForCodeWhisperer(editor: vscode.TextEditor): codew
     const offset = document.offsetAt(curPos)
     TelemetryHelper.instance.cursorOffset = offset
 
-    const caretLeftFileContext = editor.document.getText(
+    let caretLeftFileContext = editor.document.getText(
         new vscode.Range(
             document.positionAt(offset - CodeWhispererConstants.charactersLimit),
             document.positionAt(offset)
         )
     )
+
+    if (editorFileContext.filename.includes('ipynb')) {
+        const visibleEditors = vscode.window.visibleTextEditors
+        const notebookEditors: vscode.TextEditor[] = []
+        visibleEditors.forEach(e => {
+            if (e.document.fileName === editor.document.fileName) {
+                notebookEditors.push(e)
+            }
+        })
+        caretLeftFileContext = ''
+        const k = notebookEditors.indexOf(editor)
+        getLogger().debug(
+            `Getting context for Jupyter Notebook, found ${visibleEditors.length} cells, current is ${k + 1}-th cell`
+        )
+        for (let i = 0; i < k; i++) {
+            const e = notebookEditors[i]
+            if (e.document.languageId === 'markdown') {
+                caretLeftFileContext += `\n"""\n${e.document.getText()}\n"""\n`
+            } else if (e.document.languageId === 'python') {
+                caretLeftFileContext += `\n${e.document.getText()}\n`
+            }
+        }
+        caretLeftFileContext += editor.document.getText(
+            new vscode.Range(
+                document.positionAt(offset - CodeWhispererConstants.charactersLimit),
+                document.positionAt(offset)
+            )
+        )
+        caretLeftFileContext = caretLeftFileContext.slice(-CodeWhispererConstants.charactersLimit)
+        getLogger().debug(`Left context for Jupyter Notebook is ${caretLeftFileContext}`)
+    }
 
     const caretRightFileContext = editor.document.getText(
         new vscode.Range(
