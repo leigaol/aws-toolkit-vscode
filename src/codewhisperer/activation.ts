@@ -12,8 +12,7 @@ import { getCompletionItems } from './service/completionProvider'
 import { vsCodeState, ConfigurationEntry } from './models/model'
 import { InlineCompletion } from './service/inlineCompletion'
 import { invokeRecommendation } from './commands/invokeRecommendation'
-import { onAcceptance } from './commands/onAcceptance'
-import { onInlineAcceptance } from './commands/onInlineAcceptance'
+import { acceptSuggestion } from './commands/onInlineAcceptance'
 import { resetIntelliSenseState } from './util/globalStateUtil'
 import { CodeWhispererSettings } from './util/codewhispererSettings'
 import { ExtContext } from '../shared/extensions'
@@ -48,11 +47,6 @@ import { InlineCompletionService } from './service/inlineCompletionService'
 import { isInlineCompletionEnabled } from './util/commonUtil'
 import { HoverConfigUtil } from './util/hoverConfigUtil'
 import { CodeWhispererCodeCoverageTracker } from './tracker/codewhispererCodeCoverageTracker'
-import {
-    CodewhispererCompletionType,
-    CodewhispererLanguage,
-    CodewhispererTriggerType,
-} from '../shared/telemetry/telemetry'
 
 const performance = globalThis.performance ?? require('perf_hooks').performance
 
@@ -172,38 +166,7 @@ export async function activate(context: ExtContext): Promise<void> {
         /**
          * On recommendation acceptance
          */
-        Commands.register(
-            'aws.codeWhisperer.accept',
-            async (
-                range: vscode.Range,
-                acceptIndex: number,
-                recommendation: string,
-                requestId: string,
-                sessionId: string,
-                triggerType: CodewhispererTriggerType,
-                completionType: CodewhispererCompletionType,
-                language: CodewhispererLanguage,
-                references: codewhispererClient.References
-            ) => {
-                const editor = vscode.window.activeTextEditor
-                const onAcceptanceFunc = isInlineCompletionEnabled() ? onInlineAcceptance : onAcceptance
-                await onAcceptanceFunc(
-                    {
-                        editor,
-                        range,
-                        acceptIndex,
-                        recommendation,
-                        requestId,
-                        sessionId,
-                        triggerType,
-                        completionType,
-                        language,
-                        references,
-                    },
-                    context.extensionContext.globalState
-                )
-            }
-        ),
+        acceptSuggestion.register(context),
         // on text document close.
         vscode.workspace.onDidCloseTextDocument(e => {
             RecommendationHandler.instance.reportUserDecisionOfCurrentRecommendation(vscode.window.activeTextEditor, -1)

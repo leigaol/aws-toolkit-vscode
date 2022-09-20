@@ -18,6 +18,50 @@ import { sleep } from '../../shared/utilities/timeoutUtils'
 import { handleExtraBrackets } from '../util/closingBracketUtil'
 import { ReferenceHoverProvider } from '../service/referenceHoverProvider'
 import { ReferenceLogViewProvider } from '../service/referenceLogViewProvider'
+import { Commands } from '../../shared/vscode/commands2'
+import { isInlineCompletionEnabled } from '../util/commonUtil'
+import { ExtContext } from '../../shared/extensions'
+import { onAcceptance } from './onAcceptance'
+import * as codewhispererClient from '../client/codewhisperer'
+import {
+    CodewhispererCompletionType,
+    CodewhispererLanguage,
+    CodewhispererTriggerType,
+} from '../../shared/telemetry/telemetry.gen'
+
+export const acceptSuggestion = Commands.declare(
+    'aws.codeWhisperer.accept',
+    (context: ExtContext) =>
+        async (
+            range: vscode.Range,
+            acceptIndex: number,
+            recommendation: string,
+            requestId: string,
+            sessionId: string,
+            triggerType: CodewhispererTriggerType,
+            completionType: CodewhispererCompletionType,
+            language: CodewhispererLanguage,
+            references: codewhispererClient.References
+        ) => {
+            const editor = vscode.window.activeTextEditor
+            const onAcceptanceFunc = isInlineCompletionEnabled() ? onInlineAcceptance : onAcceptance
+            await onAcceptanceFunc(
+                {
+                    editor,
+                    range,
+                    acceptIndex,
+                    recommendation,
+                    requestId,
+                    sessionId,
+                    triggerType,
+                    completionType,
+                    language,
+                    references,
+                },
+                context.extensionContext.globalState
+            )
+        }
+)
 
 /**
  * This function is called when user accepts a intelliSense suggestion or an inline suggestion
