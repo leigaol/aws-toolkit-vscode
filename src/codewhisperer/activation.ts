@@ -80,12 +80,6 @@ export async function activate(context: ExtContext): Promise<void> {
      */
     const client = new codewhispererClient.DefaultCodeWhispererClient()
 
-    const referenceHoverProvider = new ReferenceHoverProvider()
-    const referenceLogViewProvider = new ReferenceLogViewProvider(
-        context.extensionContext.extensionUri,
-        codewhispererSettings
-    )
-
     context.extensionContext.subscriptions.push(
         /**
          * Configuration change
@@ -106,7 +100,7 @@ export async function activate(context: ExtContext): Promise<void> {
                 vscode.commands.executeCommand('aws.codeWhisperer.refresh')
             }
             if (configurationChangeEvent.affectsConfiguration('aws.codeWhisperer')) {
-                referenceLogViewProvider.update()
+                ReferenceLogViewProvider.instance.update()
             }
             if (configurationChangeEvent.affectsConfiguration('editor.inlineSuggest.enabled')) {
                 await vscode.window
@@ -208,11 +202,6 @@ export async function activate(context: ExtContext): Promise<void> {
                     },
                     context.extensionContext.globalState
                 )
-                if (references != undefined && editor != undefined) {
-                    const referenceLog = ReferenceLogViewProvider.getReferenceLog(recommendation, references, editor)
-                    referenceLogViewProvider.addReferenceLog(referenceLog)
-                    referenceHoverProvider.addCodeReferences(recommendation, references)
-                }
             }
         ),
         // on text document close.
@@ -221,8 +210,11 @@ export async function activate(context: ExtContext): Promise<void> {
             RecommendationHandler.instance.clearRecommendations()
         }),
 
-        vscode.languages.registerHoverProvider([...CodeWhispererConstants.supportedLanguages], referenceHoverProvider),
-        vscode.window.registerWebviewViewProvider(ReferenceLogViewProvider.viewType, referenceLogViewProvider),
+        vscode.languages.registerHoverProvider(
+            [...CodeWhispererConstants.supportedLanguages],
+            ReferenceHoverProvider.instance
+        ),
+        vscode.window.registerWebviewViewProvider(ReferenceLogViewProvider.viewType, ReferenceLogViewProvider.instance),
         showReferenceLog.register(context),
         vscode.languages.registerCodeLensProvider(
             [...CodeWhispererConstants.supportedLanguages],

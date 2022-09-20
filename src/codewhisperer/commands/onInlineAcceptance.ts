@@ -16,6 +16,8 @@ import { RecommendationHandler } from '../service/recommendationHandler'
 import { InlineCompletionService } from '../service/inlineCompletionService'
 import { sleep } from '../../shared/utilities/timeoutUtils'
 import { handleExtraBrackets } from '../util/closingBracketUtil'
+import { ReferenceHoverProvider } from '../service/referenceHoverProvider'
+import { ReferenceLogViewProvider } from '../service/referenceLogViewProvider'
 
 /**
  * This function is called when user accepts a intelliSense suggestion or an inline suggestion
@@ -91,6 +93,18 @@ export async function onInlineAcceptance(
             acceptanceEntry.editor.document.getText(codeRangeAfterFormat),
             acceptanceEntry.editor.document.fileName
         )
+        if (acceptanceEntry.references !== undefined) {
+            const referenceLog = ReferenceLogViewProvider.getReferenceLog(
+                acceptanceEntry.recommendation,
+                acceptanceEntry.references,
+                acceptanceEntry.editor
+            )
+            ReferenceLogViewProvider.instance.addReferenceLog(referenceLog)
+            ReferenceHoverProvider.instance.addCodeReferences(
+                acceptanceEntry.recommendation,
+                acceptanceEntry.references
+            )
+        }
     }
 
     // at the end of recommendation acceptance, clear recommendations.
