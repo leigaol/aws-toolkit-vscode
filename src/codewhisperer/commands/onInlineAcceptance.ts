@@ -28,6 +28,7 @@ import {
 } from '../../shared/telemetry/telemetry.gen'
 import { ReferenceLogViewProvider } from '../service/referenceLogViewProvider'
 import { ReferenceHoverProvider } from '../service/referenceHoverProvider'
+import { removeOverlappingRightContext } from '../util/rightContextUtil'
 
 export const acceptSuggestion = Commands.declare(
     'aws.codeWhisperer.accept',
@@ -85,6 +86,14 @@ export async function onInlineAcceptance(
         // codewhisperer will be doing editing while formatting.
         // formatting should not trigger consoals auto trigger
         vsCodeState.isCodeWhispererEditing = true
+        /**
+         * Merge right context into the editor after suggestion is inserted.
+         */
+        try {
+            await removeOverlappingRightContext(acceptanceEntry.editor, acceptanceEntry.recommendation)
+        } catch (error) {
+            getLogger().error(`${error} in removeOverlappingRightContext`)
+        }
         /**
          * Mitigation to right context handling mainly for auto closing bracket use case
          */
