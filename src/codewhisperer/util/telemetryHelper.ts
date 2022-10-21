@@ -12,6 +12,7 @@ import {
     CodewhispererSuggestionState,
     CodewhispererTriggerType,
 } from '../../shared/telemetry/telemetry'
+import { getLogger } from '../../shared/logger'
 
 export class TelemetryHelper {
     /**
@@ -95,6 +96,9 @@ export class TelemetryHelper {
             if (_elem.content.length === 0) {
                 recommendationSuggestionState?.set(i, 'Empty')
             }
+            getLogger().error(
+                `session id ${sessionId} ${i} ${this.getSuggestionState(i, acceptIndex, recommendationSuggestionState)}`
+            )
             telemetry.codewhisperer_userDecision.emit({
                 codewhispererRequestId: requestId,
                 codewhispererSessionId: sessionId ? sessionId : undefined,
