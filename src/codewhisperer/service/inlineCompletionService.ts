@@ -390,7 +390,7 @@ export class InlineCompletionService {
         await HoverConfigUtil.instance.overwriteHoverConfig()
         this._timer = globals.clock.setInterval(async () => {
             if (!this.isSuggestionVisible()) {
-                getLogger().info(`Clearing cached suggestion`)
+                getLogger().error(`Clearing cached suggestion`)
                 await this.clearInlineCompletionStates(editor)
             }
         }, 5 * 1000)
