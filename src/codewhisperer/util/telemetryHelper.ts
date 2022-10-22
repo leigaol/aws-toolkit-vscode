@@ -99,7 +99,7 @@ export class TelemetryHelper {
                 recommendationSuggestionState?.set(i, 'Empty')
             }
             getLogger().error(
-                `${requestId} ${i} ${this.getSuggestionState(i, acceptIndex, recommendationSuggestionState)}`
+                `session: ${sessionId} ${i} ${this.getSuggestionState(i, acceptIndex, recommendationSuggestionState)}`
             )
 
             telemetry.codewhisperer_userDecision.emit({
