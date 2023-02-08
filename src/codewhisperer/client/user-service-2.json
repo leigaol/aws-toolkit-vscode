@@ -205,8 +205,29 @@
                 },
                 "references": {
                     "shape": "References"
+                },
+                "imports": {
+                    "shape": "Imports"
                 }
             }
+        },
+        "Imports": {
+            "type": "list",
+            "member": {
+                "shape": "Import"
+            },
+            "max": 10,
+            "min": 0
+        },
+        "Import": {
+            "type": "structure",
+            "members": {
+                "importStatement": {
+                    "shape": "String"
+                }
+            },
+            "max": 10,
+            "min": 0
         },
         "CompletionContentString": {
             "type": "string",
@@ -296,6 +317,14 @@
             "min": 0,
             "sensitive": true
         },
+        "ImportContext": {
+            "type": "structure",
+            "members": {
+                "enabled": {
+                    "shape": "FileContextLeftFileContentString"
+                }
+            }
+        },
         "GenerateCompletionsRequest": {
             "type": "structure",
             "required": ["fileContext"],
@@ -311,6 +340,9 @@
                 },
                 "referenceTrackerConfiguration": {
                     "shape": "ReferenceTrackerConfiguration"
+                },
+                "importContext": {
+                    "shape": "ImportContext"
                 }
             }
         },

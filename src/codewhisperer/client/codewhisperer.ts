@@ -66,7 +66,8 @@ export type CreateUploadUrlResponse =
 export type CreateCodeScanResponse =
     | CodeWhispererClient.CreateCodeScanResponse
     | CodeWhispererUserClient.StartCodeAnalysisResponse
-
+export type Import = CodeWhispererUserClient.Import
+export type Imports = CodeWhispererUserClient.Imports
 export class DefaultCodeWhispererClient {
     private credentials?: CognitoIdentityCredentials
 
