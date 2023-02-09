@@ -317,14 +317,6 @@
             "min": 0,
             "sensitive": true
         },
-        "ImportContext": {
-            "type": "structure",
-            "members": {
-                "enabled": {
-                    "shape": "FileContextLeftFileContentString"
-                }
-            }
-        },
         "GenerateCompletionsRequest": {
             "type": "structure",
             "required": ["fileContext"],
@@ -340,9 +332,6 @@
                 },
                 "referenceTrackerConfiguration": {
                     "shape": "ReferenceTrackerConfiguration"
-                },
-                "importContext": {
-                    "shape": "ImportContext"
                 }
             }
         },
