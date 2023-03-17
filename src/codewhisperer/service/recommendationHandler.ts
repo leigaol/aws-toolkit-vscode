@@ -179,6 +179,7 @@ export class RecommendationHandler {
                     page === 0,
                     codewhispererPromise
                 )
+                getLogger().info(resp)
                 TelemetryHelper.instance.setSdkApiCallEndTime()
                 latency = startTime !== 0 ? performance.now() - startTime : 0
                 if ('recommendations' in resp) {

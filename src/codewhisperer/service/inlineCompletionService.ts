@@ -217,7 +217,6 @@ const hideCommand = Commands.declare(
 export class InlineCompletionService {
     private inlineCompletionProvider?: CWInlineCompletionItemProvider
     private inlineCompletionProviderDisposable?: vscode.Disposable
-    private maxPage = 100
     private statusBar: vscode.StatusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1)
     private _timer?: NodeJS.Timer
     private _showRecommendationTimer?: NodeJS.Timer
@@ -372,28 +371,14 @@ export class InlineCompletionService {
         RecommendationHandler.instance.checkAndResetCancellationTokens()
         this.documentUri = editor.document.uri
         try {
-            let page = 0
-            while (page < this.maxPage) {
-                await RecommendationHandler.instance.getRecommendations(
-                    client,
-                    editor,
-                    triggerType,
-                    config,
-                    autoTriggerType,
-                    true,
-                    page
-                )
-                if (RecommendationHandler.instance.checkAndResetCancellationTokens()) {
-                    RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
-                    RecommendationHandler.instance.clearRecommendations()
-                    this.setCodeWhispererStatusBarOk()
-                    return
-                }
-                if (!RecommendationHandler.instance.hasNextToken()) {
-                    break
-                }
-                page++
-            }
+            await RecommendationHandler.instance.getRecommendations(
+                client,
+                editor,
+                'OnDemand',
+                config,
+                undefined,
+                false
+            )
         } catch (error) {
             getLogger().error(`Error ${error} in getPaginatedRecommendation`)
         }
