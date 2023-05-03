@@ -57,40 +57,13 @@ export async function invokeRecommendation(
             if (RecommendationHandler.instance.isGenerateRecommendationInProgress) {
                 return
             }
-            vsCodeState.isIntelliSenseActive = false
-            RecommendationHandler.instance.isGenerateRecommendationInProgress = true
-            try {
-                RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
-                RecommendationHandler.instance.clearRecommendations()
-                if (isCloud9('classic') || isIamConnection(AuthUtil.instance.conn)) {
-                    await RecommendationHandler.instance.getRecommendations(
-                        client,
-                        editor,
-                        'OnDemand',
-                        config,
-                        undefined,
-                        false
-                    )
-                } else {
-                    if (AuthUtil.instance.isConnectionExpired()) {
-                        await AuthUtil.instance.showReauthenticatePrompt()
-                    }
-                    await RecommendationHandler.instance.getRecommendations(
-                        client,
-                        editor,
-                        'OnDemand',
-                        config,
-                        undefined,
-                        true
-                    )
+            if (isCloud9('classic') || isIamConnection(AuthUtil.instance.conn)) {
+                await InlineCompletionService.instance.getPaginatedRecommendation(client, editor, 'OnDemand', config)
+            } else {
+                if (AuthUtil.instance.isConnectionExpired()) {
+                    await AuthUtil.instance.showReauthenticatePrompt()
                 }
-                if (RecommendationHandler.instance.canShowRecommendationInIntelliSense(editor, true)) {
-                    await vscode.commands.executeCommand('editor.action.triggerSuggest').then(() => {
-                        vsCodeState.isIntelliSenseActive = true
-                    })
-                }
-            } finally {
-                RecommendationHandler.instance.isGenerateRecommendationInProgress = false
+                await InlineCompletionService.instance.getPaginatedRecommendation(client, editor, 'OnDemand', config)
             }
         } else if (isInlineCompletionEnabled()) {
             TelemetryHelper.instance.setInvokeSuggestionStartTime()

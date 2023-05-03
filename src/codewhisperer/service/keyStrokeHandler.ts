@@ -80,7 +80,7 @@ export class KeyStrokeHandler {
     }
 
     public shouldTriggerIdleTime(): boolean {
-        if (isCloud9() && RecommendationHandler.instance.isGenerateRecommendationInProgress) {
+        if (RecommendationHandler.instance.isGenerateRecommendationInProgress) {
             return false
         }
         if (isInlineCompletionEnabled() && InlineCompletionService.instance.isPaginationRunning()) {
@@ -185,40 +185,25 @@ export class KeyStrokeHandler {
                 if (RecommendationHandler.instance.isGenerateRecommendationInProgress) {
                     return
                 }
-                vsCodeState.isIntelliSenseActive = false
-                RecommendationHandler.instance.isGenerateRecommendationInProgress = true
-                try {
-                    RecommendationHandler.instance.reportUserDecisionOfRecommendation(editor, -1)
-                    RecommendationHandler.instance.clearRecommendations()
-                    if (isCloud9('classic') || isIamConnection(AuthUtil.instance.conn)) {
-                        await RecommendationHandler.instance.getRecommendations(
-                            client,
-                            editor,
-                            'AutoTrigger',
-                            config,
-                            autoTriggerType,
-                            false
-                        )
-                    } else {
-                        if (AuthUtil.instance.isConnectionExpired()) {
-                            await AuthUtil.instance.showReauthenticatePrompt()
-                        }
-                        await RecommendationHandler.instance.getRecommendations(
-                            client,
-                            editor,
-                            'AutoTrigger',
-                            config,
-                            autoTriggerType,
-                            true
-                        )
+                if (isCloud9('classic') || isIamConnection(AuthUtil.instance.conn)) {
+                    await InlineCompletionService.instance.getPaginatedRecommendation(
+                        client,
+                        editor,
+                        'AutoTrigger',
+                        config,
+                        autoTriggerType
+                    )
+                } else {
+                    if (AuthUtil.instance.isConnectionExpired()) {
+                        await AuthUtil.instance.showReauthenticatePrompt()
                     }
-                    if (RecommendationHandler.instance.canShowRecommendationInIntelliSense(editor, false)) {
-                        await vscode.commands.executeCommand('editor.action.triggerSuggest').then(() => {
-                            vsCodeState.isIntelliSenseActive = true
-                        })
-                    }
-                } finally {
-                    RecommendationHandler.instance.isGenerateRecommendationInProgress = false
+                    await InlineCompletionService.instance.getPaginatedRecommendation(
+                        client,
+                        editor,
+                        'AutoTrigger',
+                        config,
+                        autoTriggerType
+                    )
                 }
             } else if (isInlineCompletionEnabled()) {
                 TelemetryHelper.instance.setInvokeSuggestionStartTime()

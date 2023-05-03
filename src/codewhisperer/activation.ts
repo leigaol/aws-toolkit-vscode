@@ -308,7 +308,7 @@ export async function activate(context: ExtContext): Promise<void> {
     }
 
     if (isCloud9()) {
-        setSubscriptionsforCloud9()
+        await setSubscriptionsforInlineCompletion()
     } else if (isInlineCompletionEnabled()) {
         await setSubscriptionsforInlineCompletion()
         await vscode.commands.executeCommand('setContext', 'CODEWHISPERER_ENABLED', true)
@@ -489,86 +489,6 @@ export async function activate(context: ExtContext): Promise<void> {
         )
 
         InlineCompletion.instance.setCodeWhispererStatusBarOk()
-    }
-
-    function setSubscriptionsforCloud9() {
-        /**
-         * Manual trigger
-         */
-        context.extensionContext.subscriptions.push(
-            vscode.languages.registerCompletionItemProvider([...CodeWhispererConstants.supportedLanguages], {
-                async provideCompletionItems(
-                    document: vscode.TextDocument,
-                    position: vscode.Position,
-                    token: vscode.CancellationToken,
-                    context: vscode.CompletionContext
-                ) {
-                    const completionList = new vscode.CompletionList(getCompletionItems(document, position), false)
-                    return completionList
-                },
-            }),
-            /**
-             * Automated trigger
-             */
-            vscode.workspace.onDidChangeTextDocument(async e => {
-                /**
-                 * CodeWhisperer security panel dynamic handling
-                 */
-                if (e.document === vscode.window.activeTextEditor?.document) {
-                    if (isCloud9()) {
-                        securityPanelViewProvider.disposeSecurityPanelItem(e, vscode.window.activeTextEditor)
-                    } else {
-                        disposeSecurityDiagnostic(e)
-                    }
-                }
-
-                CodeWhispererCodeCoverageTracker.getTracker(e.document.languageId)?.countTotalTokens(e)
-
-                if (
-                    e.document === vscode.window.activeTextEditor?.document &&
-                    runtimeLanguageContext.isLanguageSupported(e.document.languageId) &&
-                    e.contentChanges.length != 0 &&
-                    !vsCodeState.isCodeWhispererEditing
-                ) {
-                    /**
-                     * Important:  Doing this sleep(10) is to make sure
-                     * 1. this event is processed by vs code first
-                     * 2. editor.selection.active has been successfully updated by VS Code
-                     * Then this event can be processed by our code.
-                     */
-                    await sleep(CodeWhispererConstants.vsCodeCursorUpdateDelay)
-                    await KeyStrokeHandler.instance.processKeyStroke(
-                        e,
-                        vscode.window.activeTextEditor,
-                        client,
-                        await getConfigEntry()
-                    )
-                }
-            }),
-
-            /**
-             * On intelliSense recommendation rejection, reset set intelli sense is active state
-             * Maintaining this variable because VS Code does not expose official intelliSense isActive API
-             */
-            vscode.window.onDidChangeVisibleTextEditors(async e => {
-                resetIntelliSenseState(true, getAutoTriggerStatus(), RecommendationHandler.instance.isValidResponse())
-            }),
-            vscode.window.onDidChangeActiveTextEditor(async e => {
-                resetIntelliSenseState(true, getAutoTriggerStatus(), RecommendationHandler.instance.isValidResponse())
-            }),
-            vscode.window.onDidChangeTextEditorSelection(async e => {
-                if (e.kind === TextEditorSelectionChangeKind.Mouse) {
-                    resetIntelliSenseState(
-                        true,
-                        getAutoTriggerStatus(),
-                        RecommendationHandler.instance.isValidResponse()
-                    )
-                }
-            }),
-            vscode.workspace.onDidSaveTextDocument(async e => {
-                resetIntelliSenseState(true, getAutoTriggerStatus(), RecommendationHandler.instance.isValidResponse())
-            })
-        )
     }
 }
 

@@ -19,7 +19,6 @@ import { AWSError } from 'aws-sdk'
 import { isAwsError } from '../../shared/errors'
 import { TelemetryHelper } from '../util/telemetryHelper'
 import { getLogger } from '../../shared/logger'
-import { isCloud9 } from '../../shared/extensionUtilities'
 import { asyncCallWithTimeout, isInlineCompletionEnabled } from '../util/commonUtil'
 import * as codewhispererClient from '../client/codewhisperer'
 import { showTimedMessage } from '../../shared/utilities/messages'
@@ -96,9 +95,9 @@ export class RecommendationHandler {
         isFirstPaginationCall: boolean,
         promise: Promise<any>
     ): Promise<any> {
-        const timeoutMessage = isCloud9() ? `Generate recommendation timeout.` : `List recommendation timeout`
+        const timeoutMessage = `List recommendation timeout`
         try {
-            if (isManualTriggerOn && triggerType === 'OnDemand' && (isCloud9() || isFirstPaginationCall)) {
+            if (isManualTriggerOn && triggerType === 'OnDemand' && isFirstPaginationCall) {
                 return vscode.window.withProgress(
                     {
                         location: vscode.ProgressLocation.Notification,
