@@ -2,11 +2,17 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
 import { AWSError, Credentials, Service } from 'aws-sdk'
 import globals from '../../shared/extensionGlobals'
 import * as CodeWhispererClient from './codewhispererclient'
 import * as CodeWhispererUserClient from './codewhispereruserclient'
-import { ListAvailableCustomizationsResponse, SendTelemetryEventRequest } from './codewhispereruserclient'
+import {
+    ListAvailableCustomizationsResponse,
+    ListFeatureEvaluationsRequest,
+    ListFeatureEvaluationsResponse,
+    SendTelemetryEventRequest,
+} from './codewhispereruserclient'
 import * as CodeWhispererConstants from '../models/constants'
 import { ServiceOptions } from '../../shared/awsClientBuilder'
 import { hasVendedIamCredentials } from '../../auth/auth'
@@ -21,6 +27,9 @@ import { session } from '../util/codeWhispererSession'
 import { getLogger } from '../../shared/logger'
 import { indent } from '../../shared/utilities/textUtilities'
 import { keepAliveHeader } from './agent'
+import { getOptOutPreference } from '../util/commonUtil'
+import * as os from 'os'
+import { getClientId } from '../../shared/telemetry/util'
 
 export type ProgrammingLanguage = Readonly<
     CodeWhispererClient.ProgrammingLanguage | CodeWhispererUserClient.ProgrammingLanguage
@@ -218,15 +227,88 @@ export class DefaultCodeWhispererClient {
     }
 
     public async sendTelemetryEvent(request: SendTelemetryEventRequest) {
-        const requestWithOptOut: SendTelemetryEventRequest = {
+        const requestWithCommonFields: SendTelemetryEventRequest = {
             ...request,
-            optOutPreference: globals.telemetry.telemetryEnabled ? 'OPTIN' : 'OPTOUT',
+            optOutPreference: getOptOutPreference(),
+            userContext: {
+                ideCategory: 'VSCODE',
+                operatingSystem: this.getOperatingSystem(),
+                product: 'CodeWhisperer',
+                clientId: await getClientId(globals.context.globalState),
+            },
         }
         if (!AuthUtil.instance.isValidEnterpriseSsoInUse() && !globals.telemetry.telemetryEnabled) {
             return
         }
-        const response = await (await this.createUserSdkClient()).sendTelemetryEvent(requestWithOptOut).promise()
+        const response = await (await this.createUserSdkClient()).sendTelemetryEvent(requestWithCommonFields).promise()
         getLogger().debug(`codewhisperer: sendTelemetryEvent requestID: ${response.$response.requestId}`)
+    }
+
+    public async listFeatureEvaluations(): Promise<ListFeatureEvaluationsResponse> {
+        const request: ListFeatureEvaluationsRequest = {
+            userContext: {
+                ideCategory: 'VSCODE',
+                operatingSystem: this.getOperatingSystem(),
+                product: 'CodeWhisperer',
+                clientId: await getClientId(globals.context.globalState),
+            },
+        }
+        return (await this.createUserSdkClient()).listFeatureEvaluations(request).promise()
+    }
+
+    private getOperatingSystem(): string {
+        const osId = os.platform() // 'darwin', 'win32', 'linux', etc.
+        if (osId === 'darwin') {
+            return 'MAC'
+        } else if (osId === 'win32') {
+            return 'WINDOWS'
+        } else {
+            return 'LINUX'
+        }
+    }
+
+    /**
+     * @description Use this function to start the transformation job.
+     * @param request
+     * @returns transformationJobId - String id for the Job
+     */
+    public async codeModernizerStartCodeTransformation(
+        request: CodeWhispererUserClient.StartTransformationRequest
+    ): Promise<PromiseResult<CodeWhispererUserClient.StartTransformationResponse, AWSError>> {
+        return (await this.createUserSdkClient()).startTransformation(request).promise()
+    }
+
+    /**
+     * @description Use this function to stop the transformation job.
+     * @param request
+     * @returns transformationJobId - String id for the Job
+     */
+    public async codeModernizerStopCodeTransformation(
+        request: CodeWhispererUserClient.StopTransformationRequest
+    ): Promise<PromiseResult<CodeWhispererUserClient.StopTransformationResponse, AWSError>> {
+        return (await this.createUserSdkClient()).stopTransformation(request).promise()
+    }
+
+    /**
+     * @description Use this function to get the status of the code transformation. We should
+     * be polling this function periodically to get updated results. When this function
+     * returns COMPLETED we know the transformation is done.
+     */
+    public async codeModernizerGetCodeTransformation(
+        request: CodeWhispererUserClient.GetTransformationRequest
+    ): Promise<PromiseResult<CodeWhispererUserClient.GetTransformationResponse, AWSError>> {
+        return (await this.createUserSdkClient()).getTransformation(request).promise()
+    }
+
+    /**
+     * @description After starting a transformation use this function to display the LLM
+     * transformation plan to the user.
+     * @params tranformationJobId - String id returned from StartCodeTransformationResponse
+     */
+    public async codeModernizerGetCodeTransformationPlan(
+        request: CodeWhispererUserClient.GetTransformationPlanRequest
+    ): Promise<PromiseResult<CodeWhispererUserClient.GetTransformationPlanResponse, AWSError>> {
+        return (await this.createUserSdkClient()).getTransformationPlan(request).promise()
     }
 }
 
