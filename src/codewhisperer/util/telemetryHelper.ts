@@ -334,6 +334,7 @@ export class TelemetryHelper {
                         completionType: this.getSendTelemetryCompletionType(aggregatedCompletionType),
                         suggestionState: this.getSendTelemetrySuggestionState(aggregatedSuggestionState),
                         recommendationLatencyMilliseconds: e2eLatency,
+                        triggerToResponseLatencyMilliseconds: this.timeToFirstRecommendation,
                         timestamp: new Date(Date.now()),
                         suggestionReferenceCount: referenceCount,
                         generatedLine: generatedLines,
