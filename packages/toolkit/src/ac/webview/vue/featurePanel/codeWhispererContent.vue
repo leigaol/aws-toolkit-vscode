@@ -2,27 +2,22 @@
     <div :id="panelId" class="feature-panel-container border-common" :class="isActive ? 'feature-panel-selected' : ''">
         <div class="feature-panel-container-upper">
             <div class="feature-panel-container-title">Amazon Q + CodeWhisperer</div>
+
             <img
                 class="feature-panel-image"
                 src="https://github.com/aws/aws-toolkit-vscode/raw/HEAD/docs/marketplace/vscode/codewhispererChat.gif"
                 alt="CodeWhisperer Chat example GIF"
             />
+
             <div class="feature-panel-container-description">
-                Build, maintain, and transform applications using generative AI.
+                Choose a sign-in option
                 <br />
-                <br />
-                Learn more about
-                <a href="https://aws.amazon.com/q/" v-on:click="emitUiClick('auth_learnMoreAmazonQ')"> Amazon Q</a>
-                and
-                <a href="https://aws.amazon.com/codewhisperer/" v-on:click="emitUiClick('auth_learnMoreCodeWhisperer')">
-                    CodeWhisperer</a
-                >.
             </div>
         </div>
 
         <hr />
 
-        <template v-if="!removeAuthForms">
+        <template>
             <div class="feature-panel-auth-container" :key="authFormContainerKey" v-show="canShowAuthForms">
                 <BuilderIdForm
                     :state="builderIdState"
@@ -54,7 +49,7 @@ import authFormsState, { AuthForm, FeatureStatus } from '../authForms/shared.vue
 import { AuthFormId } from '../authForms/types'
 import { ConnectionUpdateArgs } from '../authForms/baseAuth.vue'
 import { WebviewClientFactory } from '../../../../webviews/client'
-import { AuthUiClick, AuthWebview } from '../show'
+import { AuthWebview } from '../authwebview'
 
 const client = WebviewClientFactory.create<AuthWebview>()
 
@@ -128,16 +123,11 @@ export default defineComponent({
 
             this.isLoaded[args.id] = true
         },
-        uiClick(id: AuthUiClick) {
-            client.emitUiClick(id)
-        },
         showCodeWhispererView() {
             client.showCodeWhispererView()
-            client.emitUiClick('auth_openCodeWhisperer')
         },
         showAmazonQChat() {
             client.showAmazonQChat()
-            client.emitUiClick('auth_amazonQChat')
         },
     },
 })

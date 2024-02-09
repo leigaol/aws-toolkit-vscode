@@ -6,7 +6,6 @@
  * for the webview to be shown.
  */
 import globals from '../../../shared/extensionGlobals'
-import { getIdeProperties, isCloud9 } from '../../../shared/extensionUtilities'
 import { VueWebview } from '../../../webviews/main'
 import * as vscode from 'vscode'
 import {
@@ -15,49 +14,46 @@ import {
     SectionName,
     StaticProfile,
     StaticProfileKeyErrorMessage,
-} from '../../credentials/types'
-import { Auth } from '../../auth'
-import { getCredentialFormatError, getCredentialsErrors } from '../../credentials/validation'
-import { profileExists } from '../../credentials/sharedCredentials'
+} from '../../../auth/credentials/types'
+import { Auth } from '../../../auth/auth'
+import { getCredentialFormatError, getCredentialsErrors } from '../../../auth/credentials/validation'
+import { profileExists } from '../../../auth/credentials/sharedCredentials'
 import { getLogger } from '../../../shared/logger'
 import { AuthUtil as CodeWhispererAuth } from '../../../codewhisperer/util/authUtil'
 import { CodeCatalystAuthenticationProvider } from '../../../codecatalyst/auth'
 import { ToolkitError } from '../../../shared/errors'
-import { createSsoProfile, isBuilderIdConnection, isIdcSsoConnection } from '../../connection'
+import { createSsoProfile, isBuilderIdConnection, isIdcSsoConnection } from '../../../auth/connection'
 import {
     tryAddCredentials,
     signout,
     showRegionPrompter,
     promptAndUseConnection,
     ExtensionUse,
-    addConnection,
     hasIamCredentials,
     hasBuilderId,
     hasSso,
     BuilderIdKind,
     findSsoConnections,
-} from '../../utils'
+} from '../../../auth/utils'
 import { Region } from '../../../shared/regions/endpoints'
 import { CancellationError } from '../../../shared/utilities/timeoutUtils'
-import { validateSsoUrl, validateSsoUrlFormat } from '../../sso/validation'
-import { awsIdSignIn, showCodeWhispererConnectionPrompt } from '../../../codewhisperer/util/showSsoPrompt'
-import { AuthError, ServiceItemId, isServiceItemId, authFormTelemetryMapping, userCancelled } from './types'
+import { validateSsoUrl, validateSsoUrlFormat } from '../../../auth/sso/validation'
+import { awsIdSignIn } from '../../../codewhisperer/util/showSsoPrompt'
+import { AuthError, ServiceItemId, authFormTelemetryMapping, userCancelled } from './types'
 import { connectToEnterpriseSso } from '../../../codewhisperer/util/getStartUrl'
-import { trustedDomainCancellation } from '../../sso/model'
+import { trustedDomainCancellation } from '../../../auth/sso/model'
 import { FeatureId, CredentialSourceId, Result, telemetry } from '../../../shared/telemetry/telemetry'
 import { AuthFormId } from './authForms/types'
 import { handleWebviewError } from '../../../webviews/server'
 import { amazonQChatSource, cwQuickPickSource, cwTreeNodeSource } from '../../../codewhisperer/commands/types'
-import { Commands, VsCodeCommandArg, placeholder, vscodeComponent } from '../../../shared/vscode/commands2'
-import { ClassToInterfaceType } from '../../../shared/utilities/tsUtils'
+import { placeholder, vscodeComponent } from '../../../shared/vscode/commands2'
 import { debounce } from 'lodash'
 import { submitFeedback } from '../../../feedback/vue/submitFeedback'
 import { InvalidGrantException } from '@aws-sdk/client-sso-oidc'
-import { isInBrowser } from '../../../common/browserUtils'
 
 export class AuthWebview extends VueWebview {
-    public override id: string = 'authWebview'
-    public override source: string = 'src/auth/ui/vue/index.js'
+    public override id: string = 'aws.AmazonQChatView2'
+    public override source: string = 'src/ac/webview/vue/index.js'
     public readonly onDidConnectionChangeCodeCatalyst = new vscode.EventEmitter<void>()
     public readonly onDidConnectionChangeExplorer = new vscode.EventEmitter<void>()
     public readonly onDidConnectionChangeCodeWhisperer = new vscode.EventEmitter<void>()
@@ -179,10 +175,6 @@ export class AuthWebview extends VueWebview {
 
     async showCodeCatalystNode(): Promise<void> {
         await vscode.commands.executeCommand('aws.codecatalyst.maybeFocus')
-    }
-
-    async showAmazonQChat(): Promise<void> {
-        return focusAmazonQPanel()
     }
 
     async getIdentityCenterRegion(): Promise<Region | undefined> {
@@ -626,6 +618,9 @@ export class AuthWebview extends VueWebview {
         return this.#totalAuthAttempts
     }
 
+    async showAmazonQChat(): Promise<void> {
+        await vscode.commands.executeCommand('aws.AmazonQChatView.focus')
+    }
     /**
      * This metric is emitted on an attempt to signin/connect/submit auth regardless
      * of success.
@@ -659,52 +654,12 @@ export class AuthWebview extends VueWebview {
             this.#previousFailedAuth = undefined
         }
     }
-
-    /**
-     * The metric when certain elements in the webview are clicked
-     */
-    emitUiClick(id: AuthUiClick) {
-        telemetry.ui_click.emit({
-            elementId: id,
-        })
-    }
 }
-
-export type AuthUiClick =
-    | 'auth_signUpForFree'
-    | 'auth_infoIAMIdentityCenter'
-    | 'auth_learnMoreAWSResources'
-    | 'auth_learnMoreCodeWhisperer'
-    | 'auth_learnMoreAmazonQ'
-    | 'auth_learnMoreCodeCatalyst'
-    | 'auth_learnMoreBuilderId'
-    | 'auth_learnMoreProfessionalTierCodeWhisperer'
-    | 'auth_explorer_expandIAMIdentityCenter'
-    | 'auth_explorer_expandIAMCredentials'
-    | 'auth_codewhisperer_expandIAMIdentityCenter'
-    | 'auth_codecatalyst_expandIAMIdentityCenter'
-    | 'auth_openConnectionSelector'
-    | 'auth_openAWSExplorer'
-    | 'auth_openCodeWhisperer'
-    | 'auth_amazonQChat'
-    | 'auth_openCodeCatalyst'
-    | 'auth_editCredentials'
-    | 'auth_codewhisperer_signoutBuilderId'
-    | 'auth_codewhisperer_signoutIdentityCenter'
-    | 'auth_codecatalyst_signoutBuilderId'
-    | 'auth_codecatalyst_signoutIdentityCenter'
-    | 'auth_explorer_signoutIdentityCenter'
-
-// type AuthAreas = 'awsExplorer' | 'codewhisperer' | 'codecatalyst'
 
 export function buildCommaDelimitedString(strings: Iterable<string>): string {
     const sorted = Array.from(new Set(strings)).sort((a, b) => a.localeCompare(b))
     return sorted.join(',')
 }
-
-const Panel = VueWebview.compilePanel(AuthWebview)
-let activePanel: InstanceType<typeof Panel> | undefined
-let subscriptions: vscode.Disposable[] | undefined
 
 /**
  * Different places the Add Connection command could be executed from.
@@ -723,145 +678,3 @@ export const AuthSources = {
 } as const
 
 export type AuthSource = (typeof AuthSources)[keyof typeof AuthSources]
-
-export const showManageConnections = Commands.declare(
-    { id: 'aws.auth.manageConnections', compositeKey: { 1: 'source' } },
-    (context: vscode.ExtensionContext) => (_: VsCodeCommandArg, source: AuthSource, serviceToShow?: ServiceItemId) => {
-        if (_ !== placeholder) {
-            source = 'vscodeComponent'
-        }
-
-        // The auth webview page does not make sense to use in C9,
-        // so show the auth quick pick instead.
-        if (isCloud9('any') || isInBrowser()) {
-            if (source.toLowerCase().includes('codewhisperer')) {
-                // Show CW specific quick pick for CW connections
-                return showCodeWhispererConnectionPrompt()
-            }
-            return addConnection.execute()
-        }
-
-        if (!isServiceItemId(serviceToShow)) {
-            serviceToShow = undefined
-        }
-        return showAuthWebview(context, source, serviceToShow)
-    }
-)
-
-async function showAuthWebview(
-    ctx: vscode.ExtensionContext,
-    source: AuthSource,
-    serviceToShow?: ServiceItemId
-): Promise<void> {
-    let wasInitialServiceSet = false
-    if (activePanel && serviceToShow) {
-        // Webview is already open, so we have to select the service
-        // through an event
-        activePanel.server.onDidSelectService.fire(serviceToShow)
-        wasInitialServiceSet = true
-    }
-
-    activePanel ??= new Panel(ctx, CodeCatalystAuthenticationProvider.fromContext(ctx))
-
-    if (!wasInitialServiceSet && serviceToShow) {
-        // Webview does not exist yet, preemptively set
-        // the initial service to show
-        activePanel.server.setInitialService(serviceToShow)
-    }
-
-    activePanel.server.setSource(source)
-    activePanel.server.setupConnectionChangeEmitter()
-
-    const webview = await activePanel!.show({
-        title: `${getIdeProperties().company} Toolkit: Add Connection to AWS`,
-        viewColumn: isCloud9() ? vscode.ViewColumn.One : vscode.ViewColumn.Active,
-        retainContextWhenHidden: true,
-    })
-
-    if (!subscriptions) {
-        subscriptions = [
-            webview.onDidDispose(() => {
-                if (activePanel) {
-                    emitWebviewClosed(activePanel.server).catch(e => {
-                        getLogger().error('emitWebviewClosed failed: %s', (e as Error).message)
-                    })
-                }
-                vscode.Disposable.from(...(subscriptions ?? [])).dispose()
-                activePanel = undefined
-                subscriptions = undefined
-            }),
-        ]
-    }
-}
-
-/**
- * The metric emitted when the webview is closed by the user.
- */
-export async function emitWebviewClosed(authWebview: ClassToInterfaceType<AuthWebview>) {
-    const [prevFeatureType, prevAuthType] = [authWebview.getPreviousFeatureType(), authWebview.getPreviousAuthType()]
-    if (prevFeatureType && prevAuthType) {
-        // We are closing the webview, and have an auth form if they were
-        // interacting but did not complete it.
-        await authWebview.stopAuthFormInteraction(prevFeatureType, prevAuthType)
-    }
-
-    const authsInitial = authWebview.getAuthsInitial()
-    const authsAdded = authWebview.getAuthsAdded()
-
-    const numConnectionsInitial = authsInitial.size
-    const numConnectionsAdded = authsAdded.length
-
-    const source = authWebview.getSource()
-    const result: Result = determineResult(source, numConnectionsInitial, numConnectionsAdded)
-
-    telemetry.auth_addedConnections.emit({
-        source: source ?? '',
-        result,
-        attempts: authWebview.getTotalAuthAttempts(),
-        reason: 'closedWebview',
-        authConnectionsCount: numConnectionsInitial + numConnectionsAdded,
-        newAuthConnectionsCount: numConnectionsAdded,
-        enabledAuthConnections: buildCommaDelimitedString(new Set([...authsInitial, ...authsAdded])),
-        newEnabledAuthConnections: buildCommaDelimitedString(authsAdded),
-    })
-
-    function determineResult(
-        source: AuthSource | undefined,
-        numConnectionsInitial: number,
-        numConnectionsAdded: number
-    ): Result {
-        let result: Result
-
-        if (numConnectionsAdded > 0) {
-            result = 'Succeeded'
-        } else if (authWebview.getTotalAuthAttempts() > 0) {
-            // There were no new auth connections added, but attempts were made
-            result = 'Failed'
-        } else {
-            // No new auth connections added, but no attempts were made
-            result = 'Cancelled'
-        }
-
-        if (source === 'firstStartup' && numConnectionsAdded === 0) {
-            if (numConnectionsInitial > 0) {
-                // This is the users first startup of the extension and no new connections were added, but they already had connections setup on their
-                // system which we discovered. We consider this a success even though they added no new connections.
-                result = 'Succeeded'
-            } else {
-                // A brand new user with no new auth connections did not add any
-                // connections
-                result = 'Failed'
-            }
-        }
-
-        return result
-    }
-}
-
-/**
- * Forces focus to Amazon Q panel - USE THIS SPARINGLY (don't betray customer trust by hijacking the IDE)
- * Used on first load, and any time we want to directly populate chat.
- */
-export async function focusAmazonQPanel(): Promise<void> {
-    await vscode.commands.executeCommand('aws.AmazonQChatView.focus')
-}
