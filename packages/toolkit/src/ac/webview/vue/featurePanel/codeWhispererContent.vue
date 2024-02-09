@@ -2,13 +2,6 @@
     <div :id="panelId" class="feature-panel-container border-common" :class="isActive ? 'feature-panel-selected' : ''">
         <div class="feature-panel-container-upper">
             <div class="feature-panel-container-title">Amazon Q + CodeWhisperer</div>
-
-            <img
-                class="feature-panel-image"
-                src="https://github.com/aws/aws-toolkit-vscode/raw/HEAD/docs/marketplace/vscode/codewhispererChat.gif"
-                alt="CodeWhisperer Chat example GIF"
-            />
-
             <div class="feature-panel-container-description">
                 Choose a sign-in option
                 <br />
