@@ -37,22 +37,17 @@
         <!-- Body -->
         <div class="body">
             <!-- Functionality -->
-            <div class="bodySubDiv">
-                <GenerateSuggestionTab />
-            </div>
+            <div class="bodySubDiv"></div>
         </div>
     </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import GenerateSuggestionTab from '../../../codewhisperer/vue/genSuggestionTab.vue'
 
 export default defineComponent({
     name: 'Getting_Startedc',
-    components: {
-        GenerateSuggestionTab,
-    },
+    components: {},
     data() {
         return {
             bannerVisible: true,
