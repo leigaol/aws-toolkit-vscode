@@ -94,7 +94,7 @@ interface LoadMoreable<T> {
 }
 
 const loadMore = <T>(controller: LoadMoreable<T>) => controller.loadMore()
-export const loadMoreCommand = Commands.instance.register('_aws.resources.loadMore', loadMore)
+export const loadMoreCommand = Commands.instance.register('b_aws.resources.loadMore', loadMore)
 
 interface TreeNodeOptions<T> {
     /**

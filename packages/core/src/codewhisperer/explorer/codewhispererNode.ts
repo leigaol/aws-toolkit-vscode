@@ -151,7 +151,7 @@ export function getCodewhispererNode(): CodeWhispererNode {
     return (_codewhispererNode ??= new CodeWhispererNode())
 }
 export const refreshCodeWhisperer = (provider?: ResourceTreeDataProvider) =>
-    Commands.register({ id: 'aws.codeWhisperer.refresh', logging: false }, (showFreeTierLimitNode = false) => {
+    Commands.register({ id: 'baws.codeWhisperer.refresh', logging: false }, (showFreeTierLimitNode = false) => {
         getCodewhispererNode().updateShowFreeTierLimitReachedNode(showFreeTierLimitNode)
         getCodewhispererNode().refresh()
         if (provider) {
@@ -160,7 +160,7 @@ export const refreshCodeWhisperer = (provider?: ResourceTreeDataProvider) =>
     })
 
 export const refreshCodeWhispererRootNode = (provider?: ResourceTreeDataProvider) =>
-    Commands.register({ id: 'aws.codeWhisperer.refreshRootNode', logging: false }, () => {
+    Commands.register({ id: 'baws.codeWhisperer.refreshRootNode', logging: false }, () => {
         getCodewhispererNode().refreshRootNode()
         if (provider) {
             provider.refresh()

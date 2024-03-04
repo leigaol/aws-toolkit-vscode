@@ -4,10 +4,16 @@
  */
 
 import type { ExtensionContext } from 'vscode'
-import { awsToolkitActivate, awsToolkitDeactivate } from 'aws-core-vscode'
+import { awsToolkitActivate, awsToolkitDeactivate, Auth } from 'aws-core-vscode'
+import { Connection } from '../../core/dist/src/auth/connection'
 
 export async function activate(context: ExtensionContext) {
-    return awsToolkitActivate(context)
+    await awsToolkitActivate(context)
+    return {
+        async listConnections(): Promise<Connection[]> {
+            return Auth.instance.listConnections()
+        },
+    }
 }
 
 export async function deactivate() {

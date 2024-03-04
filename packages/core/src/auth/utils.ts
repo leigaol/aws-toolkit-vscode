@@ -51,7 +51,7 @@ import { getLogger } from '../shared/logger'
 import { isValidCodeWhispererCoreConnection } from '../codewhisperer/util/authUtil'
 
 // TODO: Look to do some refactoring to handle circular dependency later and move this to ./commands.ts
-export const showConnectionsPageCommand = 'aws.auth.manageConnections'
+export const showConnectionsPageCommand = 'baws.auth.manageConnections'
 
 // iam-only excludes Builder ID and IAM Identity Center from the list of valid connections
 // TODO: Understand if "iam" should include these from the list at all
@@ -86,7 +86,7 @@ export async function promptAndUseConnection(...[auth, type]: Parameters<typeof 
     })
 }
 
-const switchConnections = Commands.register('aws.auth.switchConnections', (auth: Auth | TreeNode | unknown) => {
+const switchConnections = Commands.register('__aws.auth.switchConnections', (auth: Auth | TreeNode | unknown) => {
     telemetry.ui_click.emit({ elementId: 'devtools_connectToAws' })
 
     if (!(auth instanceof Auth)) {
@@ -236,18 +236,18 @@ export async function showRegionPrompter(
     return region
 }
 
-Commands.register('aws.auth.help', async () => {
+Commands.register('xaws.auth.help', async () => {
     await openUrl(vscode.Uri.parse(authHelpUrl))
     telemetry.aws_help.emit()
 })
 
-Commands.register('aws.auth.signout', () => {
+Commands.register('xaws.auth.signout', () => {
     telemetry.ui_click.emit({ elementId: 'devtools_signout' })
     return signout(Auth.instance)
 })
 
 export const addConnection = Commands.register(
-    { id: 'aws.auth.addConnection', telemetryThrottleMs: false },
+    { id: 'abws.auth.addConnection', telemetryThrottleMs: false },
     async () => {
         const c9IamItem = createIamItem()
         c9IamItem.detail =
@@ -511,7 +511,7 @@ export function createConnectionPrompter(auth: Auth, type?: 'iam' | 'iam-only' |
     }
 }
 
-export const reauthCommand = Commands.register('_aws.auth.reauthenticate', async (auth: Auth, conn: Connection) => {
+export const reauthCommand = Commands.register('_baws.auth.reauthenticate', async (auth: Auth, conn: Connection) => {
     try {
         return await auth.reauthenticate(conn)
     } catch (err) {
@@ -520,16 +520,16 @@ export const reauthCommand = Commands.register('_aws.auth.reauthenticate', async
 })
 
 // Used to decouple from the `Commands` implementation
-Commands.register('_aws.auth.autoConnect', () => Auth.instance.tryAutoConnect())
+Commands.register('_baws.auth.autoConnect', () => Auth.instance.tryAutoConnect())
 
-export const useIamCredentials = Commands.register('_aws.auth.useIamCredentials', (auth: Auth) => {
+export const useIamCredentials = Commands.register('_baws.auth.useIamCredentials', (auth: Auth) => {
     telemetry.ui_click.emit({ elementId: 'explorer_IAMselect_VSCode' })
 
     return promptAndUseConnection(auth, 'iam')
 })
 
 // Legacy commands
-export const login = Commands.register('aws.login', async () => {
+export const login = Commands.register('baws.login', async () => {
     const auth = Auth.instance
     const connections = await auth.listConnections()
     if (connections.length === 0) {
@@ -539,9 +539,9 @@ export const login = Commands.register('aws.login', async () => {
         return switchConnections.execute(auth)
     }
 })
-Commands.register('aws.logout', () => signout(Auth.instance))
-Commands.register('aws.credentials.edit', () => globals.awsContextCommands.onCommandEditCredentials())
-Commands.register('aws.credentials.profile.create', async () => {
+Commands.register('baws.logout', () => signout(Auth.instance))
+Commands.register('baws.credentials.edit', () => globals.awsContextCommands.onCommandEditCredentials())
+Commands.register('baws.credentials.profile.create', async () => {
     try {
         await globals.awsContextCommands.onCommandCreateCredentialsProfile()
     } finally {

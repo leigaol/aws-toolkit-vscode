@@ -726,7 +726,7 @@ export const AuthSources = {
 export type AuthSource = (typeof AuthSources)[keyof typeof AuthSources]
 
 export const showManageConnections = Commands.declare(
-    { id: 'aws.auth.manageConnections', compositeKey: { 1: 'source' } },
+    { id: 'baws.auth.manageConnections', compositeKey: { 1: 'source' } },
     (context: vscode.ExtensionContext) => (_: VsCodeCommandArg, source: AuthSource, serviceToShow?: ServiceItemId) => {
         if (_ !== placeholder) {
             source = 'vscodeComponent'

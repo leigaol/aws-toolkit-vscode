@@ -54,5 +54,8 @@
     },
     "dependencies": {},
     "devDependencies": {},
-    "contributes": {}
+    "contributes": {},
+    "extensionDependencies": [
+        "amazonwebservices.aws-toolkit-vscode"
+    ]
 }

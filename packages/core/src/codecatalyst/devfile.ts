@@ -44,7 +44,7 @@ async function updateDevfile(uri: vscode.Uri): Promise<void> {
 
 export const updateDevfileCommand = Commands.register(
     {
-        id: 'aws.codecatalyst.updateDevfile',
+        id: 'baws.codecatalyst.updateDevfile',
         telemetryName: 'codecatalyst_updateDevfile',
     },
     updateDevfile

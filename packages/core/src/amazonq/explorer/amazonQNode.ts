@@ -111,7 +111,7 @@ export class AmazonQNode implements TreeNode {
 
 export const amazonQNode = new AmazonQNode()
 export const refreshAmazonQ = (provider?: ResourceTreeDataProvider) =>
-    Commands.register({ id: 'aws.amazonq.refresh', logging: false }, (showFreeTierLimitNode = false) => {
+    Commands.register({ id: 'baws.amazonq.refresh', logging: false }, (showFreeTierLimitNode = false) => {
         amazonQNode.updateShowFreeTierLimitReachedNode(showFreeTierLimitNode)
         amazonQNode.refresh()
         if (provider) {
@@ -120,7 +120,7 @@ export const refreshAmazonQ = (provider?: ResourceTreeDataProvider) =>
     })
 
 export const refreshAmazonQRootNode = (provider?: ResourceTreeDataProvider) =>
-    Commands.register({ id: 'aws.amazonq.refreshRootNode', logging: false }, () => {
+    Commands.register({ id: 'baws.amazonq.refreshRootNode', logging: false }, () => {
         amazonQNode.refreshRootNode()
         if (provider) {
             provider.refresh()

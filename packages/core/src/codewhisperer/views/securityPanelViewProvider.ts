@@ -19,7 +19,7 @@ async function openEditorAtRange(path: string, startLine: number, endLine: numbe
     })
 }
 
-vscode.commands.registerCommand('aws.codeWhisperer.openEditorAtRange', openEditorAtRange)
+vscode.commands.registerCommand('baws.codeWhisperer.openEditorAtRange', openEditorAtRange)
 
 export class SecurityPanelViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'aws.codeWhisperer.securityPanel'

@@ -18,20 +18,20 @@ import { Connection } from '../auth/connection'
 import { openUrl } from '../shared/utilities/vsCodeUtils'
 import { showManageConnections } from '../auth/ui/vue/show'
 
-const learnMoreCommand = Commands.register('aws.learnMore', async (docsUrl: vscode.Uri) => {
+const learnMoreCommand = Commands.register('baws.learnMore', async (docsUrl: vscode.Uri) => {
     return openUrl(docsUrl)
 })
 
 // Only used in rare cases on C9
 const reauth = Commands.register(
-    '_aws.codecatalyst.reauthenticate',
+    '_baws.codecatalyst.reauthenticate',
     async (conn: Connection, authProvider: CodeCatalystAuthenticationProvider) => {
         await authProvider.auth.reauthenticate(conn)
     }
 )
 
 const onboardCommand = Commands.register(
-    '_aws.codecatalyst.onboard',
+    '_baws.codecatalyst.onboard',
     async (authProvider: CodeCatalystAuthenticationProvider) => {
         void authProvider.promptOnboarding()
     }

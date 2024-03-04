@@ -20,9 +20,9 @@ export async function activate(activateArguments: {
     const extensionContext = activateArguments.extContext.extensionContext
     const regionProvider = activateArguments.extContext.regionProvider
     extensionContext.subscriptions.push(
-        Commands.register('aws.apig.copyUrl', async (node: RestApiNode) => await copyUrlCommand(node, regionProvider)),
+        Commands.register('baws.apig.copyUrl', async (node: RestApiNode) => await copyUrlCommand(node, regionProvider)),
         Commands.register(
-            'aws.apig.invokeRemoteRestApi',
+            'baws.apig.invokeRemoteRestApi',
             async (node: RestApiNode) =>
                 await invokeRemoteRestApi(activateArguments.extContext, {
                     apiNode: node,

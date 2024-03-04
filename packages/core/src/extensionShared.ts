@@ -84,7 +84,7 @@ export async function activateShared(context: vscode.ExtensionContext): Promise<
     if (isCloud9()) {
         vscode.window.withProgress = wrapWithProgressForCloud9(globals.outputChannel)
         context.subscriptions.push(
-            Commands.register('aws.quickStart', async () => {
+            Commands.register('baws.quickStart', async () => {
                 try {
                     await showQuickStartWebview(context)
                 } finally {
@@ -156,23 +156,23 @@ export function registerCommands(extensionContext: vscode.ExtensionContext) {
         // No-op command used for decoration-only codelenses.
         vscode.commands.registerCommand('aws.doNothingCommand', () => {}),
         // "Show AWS Commands..."
-        Commands.register('aws.listCommands', () =>
+        Commands.register('baws.listCommands', () =>
             vscode.commands.executeCommand('workbench.action.quickOpen', `> ${getIdeProperties().company}:`)
         ),
         // register URLs in extension menu
-        Commands.register('aws.help', async () => {
+        Commands.register('baws.help', async () => {
             void openUrl(vscode.Uri.parse(documentationUrl))
             telemetry.aws_help.emit()
         }),
-        Commands.register('aws.github', async () => {
+        Commands.register('baws.github', async () => {
             void openUrl(vscode.Uri.parse(githubUrl))
             telemetry.aws_showExtensionSource.emit()
         }),
-        Commands.register('aws.createIssueOnGitHub', async () => {
+        Commands.register('baws.createIssueOnGitHub', async () => {
             void openUrl(vscode.Uri.parse(githubCreateIssueUrl))
             telemetry.aws_reportPluginIssue.emit()
         }),
-        Commands.register('aws.aboutToolkit', async () => {
+        Commands.register('baws.aboutToolkit', async () => {
             await aboutToolkit()
         })
     )

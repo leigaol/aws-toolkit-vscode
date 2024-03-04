@@ -48,14 +48,14 @@ export class CdkRootNode implements TreeNode {
 
 export const cdkNode = new CdkRootNode()
 export const refreshCdkExplorer = (provider?: ResourceTreeDataProvider) =>
-    Commands.register('aws.cdk.refresh', () => {
+    Commands.register('baws.cdk.refresh', () => {
         cdkNode.refresh()
         if (provider) {
             provider.refresh()
         }
     })
 
-Commands.register('aws.cdk.viewDocs', () => {
+Commands.register('baws.cdk.viewDocs', () => {
     void openUrl(vscode.Uri.parse(cdkDocumentationUrl))
     telemetry.aws_help.emit({ name: 'cdk' })
 })
