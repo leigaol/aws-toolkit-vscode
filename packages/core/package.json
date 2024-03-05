@@ -30,7 +30,12 @@
     "browser": "./dist/src/extensionWeb",
     "exports": {
         ".": "./dist/src/index.js",
-        "./web": "./dist/src/indexWeb.js"
+        "./web": "./dist/src/indexWeb.js",
+        "./amazonq": "./dist/src/amazonq/index.js",
+        "./codewhisperer": "./dist/src/codewhisperer/index.js",
+        "./shared": "./dist/src/shared/index.js",
+        "./auth": "./dist/src/auth/index.js",
+        "./amazonqGumby": "./dist/src/amazonqGumby/index.js"
     },
     "contributes": {
         "configuration": {
@@ -4223,6 +4228,7 @@
         "copyFiles": "ts-node ./scripts/build/copyFiles.ts",
         "buildScripts": "npm run generateClients && npm run generatePackage && npm run copyFiles",
         "compile": "npm run clean && npm run buildScripts && tsc -p ./ && webpack --mode development",
+        "liteCompile": "tsc -p ./",
         "watch": "npm run clean && npm run buildScripts && tsc -watch -p ./",
         "testCompile": "npm run clean && npm run buildScripts && tsc -p ./",
         "test": "npm run testCompile && c8 ts-node ./scripts/test/test.ts",
