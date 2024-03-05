@@ -105,9 +105,12 @@ export class CommonAuthViewProvider implements WebviewViewProvider {
 				</head>
 				<body>
                      
+                    <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.3.4/vue.global.js"></script>
 					<script>
 						const vscode = acquireVsCodeApi();
+                        
 					</script>
+
 
                     <div id="vue-app"></div>
 
