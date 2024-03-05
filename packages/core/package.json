@@ -35,7 +35,8 @@
         "./codewhisperer": "./dist/src/codewhisperer/index.js",
         "./shared": "./dist/src/shared/index.js",
         "./auth": "./dist/src/auth/index.js",
-        "./amazonqGumby": "./dist/src/amazonqGumby/index.js"
+        "./amazonqGumby": "./dist/src/amazonqGumby/index.js",
+        "./login": "./dist/src/login/webview/index.js"
     },
     "contributes": {
         "configuration": {
@@ -704,14 +705,15 @@
             "amazonq": [
                 {
                     "type": "webview",
-                    "id": "aws.AmazonQChatView",
-                    "name": "%AWS.amazonq.chat%",
-                    "when": "!isCloud9 && !aws.isSageMaker"
+                    "id": "aws.AmazonCommonAuth",
+                    "name": "%AWS.amazonq.login%",
+                    "when": "!isCloud9 && !aws.isSageMaker && !aws.codewhisperer.connected"
                 },
                 {
-                    "id": "aws.AmazonQNeverShowBadge",
-                    "name": "",
-                    "when": "false"
+                    "type": "webview",
+                    "id": "aws.AmazonQChatView",
+                    "name": "%AWS.amazonq.chat%",
+                    "when": "!isCloud9 && !aws.isSageMaker && aws.codewhisperer.connected"
                 }
             ],
             "aws-explorer": [

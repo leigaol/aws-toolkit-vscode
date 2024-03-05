@@ -22,6 +22,7 @@ import { initializeAuth, initializeAwsCredentialsStatusBarItem } from 'aws-core-
 import { makeEndpointsProvider } from 'aws-core-vscode'
 import { activate as activateCWChat } from 'aws-core-vscode/amazonq'
 import { activate as activateQGumby } from 'aws-core-vscode/amazonqGumby'
+import { CommonAuthViewProvider } from 'aws-core-vscode/login'
 
 export async function activateShared(context: vscode.ExtensionContext) {
     void vscode.window.showInformationMessage(
@@ -48,6 +49,17 @@ export async function activateShared(context: vscode.ExtensionContext) {
     await activateCodeWhisperer(extContext as ExtContext)
     await activateCWChat(context)
     await activateQGumby(extContext as ExtContext)
+
+    const authProvider = new CommonAuthViewProvider(context, undefined, 'AMAZONQ')
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(CommonAuthViewProvider.viewType, authProvider, {
+            webviewOptions: {
+                retainContextWhenHidden: true,
+            },
+        })
+    )
+
+    await vscode.commands.executeCommand('setContext', 'aws.codewhisperer.connected', false)
 }
 
 export async function deactivateShared() {
