@@ -705,15 +705,14 @@
             "amazonq": [
                 {
                     "type": "webview",
-                    "id": "aws.AmazonCommonAuth",
-                    "name": "%AWS.amazonq.login%",
-                    "when": "!isCloud9 && !aws.isSageMaker && !aws.codewhisperer.connected"
-                },
-                {
-                    "type": "webview",
                     "id": "aws.AmazonQChatView",
                     "name": "%AWS.amazonq.chat%",
-                    "when": "!isCloud9 && !aws.isSageMaker && aws.codewhisperer.connected"
+                    "when": "!isCloud9 && !aws.isSageMaker"
+                },
+                {
+                    "id": "aws.AmazonQNeverShowBadge",
+                    "name": "",
+                    "when": "false"
                 }
             ],
             "aws-explorer": [
