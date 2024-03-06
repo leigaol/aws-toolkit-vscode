@@ -7,7 +7,6 @@ const path = require('path')
 const currentDir = process.cwd()
 
 const baseConfig = require('../webpack.base.config')
-const baseWebConfig = require('../webpack.web.config')
 
 const devServer = {
     static: {
@@ -35,17 +34,4 @@ const serveConfig = {
     },
 }
 
-const webConfig = {
-    ...baseWebConfig,
-    entry: {
-        'src/mainWeb': './src/extensionWeb.ts',
-    },
-}
-
-const webServeConfig = {
-    ...webConfig,
-    name: 'webServe',
-    devServer,
-}
-
-module.exports = process.env.npm_lifecycle_event === 'serve' ? [serveConfig, webServeConfig] : [config, webConfig]
+module.exports = process.env.npm_lifecycle_event === 'serve' ? [serveConfig] : [config]

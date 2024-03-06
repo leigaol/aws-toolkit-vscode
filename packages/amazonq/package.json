@@ -36,8 +36,7 @@
         "onStartupFinished",
         "onUri"
     ],
-    "main": "./dist/src/extension",
-    "browser": "./dist/src/extensionWeb",
+    "main": "./dist/src/main",
     "scripts": {
         "vscode:prepublish": "npm run clean && npm run buildScripts && webpack --mode production",
         "buildScripts": "npm run generateNonCodeFiles && npm run copyFiles",
@@ -57,7 +56,9 @@
         "copyPackageJson": "ts-node ./scripts/build/handlePackageJson",
         "restorePackageJson": "ts-node ./scripts/build/handlePackageJson --restore"
     },
-    "dependencies": {},
+    "dependencies": {
+        "aws-core-vscode": "file:../core/"
+    },
     "devDependencies": {},
     "contributes": {
         "configuration": {
