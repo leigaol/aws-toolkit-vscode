@@ -36,7 +36,7 @@
         "onStartupFinished",
         "onUri"
     ],
-    "main": "./dist/src/main",
+    "main": "./dist/src/extension",
     "scripts": {
         "vscode:prepublish": "npm run clean && npm run buildScripts && webpack --mode production",
         "buildScripts": "npm run generateNonCodeFiles && npm run copyFiles",
@@ -44,9 +44,6 @@
         "copyFiles": "ts-node ./scripts/build/copyFiles.ts",
         "clean": "ts-node ../../scripts/clean.ts dist/ LICENSE NOTICE quickStart* README* CHANGELOG.md",
         "compile": "npm run clean && npm run buildScripts && webpack --mode development",
-        "webWatch": "npm run clean && npm run copyFiles --vueHr && webpack --config-name web --watch",
-        "webCompile": "npm run clean && npm run buildScripts -- --vueHr && webpack --config-name web",
-        "webRun": "npx @vscode/test-web --open-devtools --browserOption=--disable-web-security --waitForDebugger=9222 --extensionDevelopmentPath=. .",
         "package": "npm run copyPackageJson && ts-node ../../scripts/package.ts && npm run restorePackageJson",
         "format": "prettier --ignore-path ../../.prettierignore --check src scripts",
         "formatfix": "prettier --ignore-path ../../.prettierignore --write src scripts",

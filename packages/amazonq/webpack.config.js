@@ -21,7 +21,7 @@ const devServer = {
 const config = {
     ...baseConfig,
     entry: {
-        'src/main': './src/extension.ts',
+        'src/extension': './src/extension.ts',
     },
 }
 
