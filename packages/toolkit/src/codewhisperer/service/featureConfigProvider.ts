@@ -13,7 +13,7 @@ export class FeatureContext {
 }
 
 const testFeatureName = 'testFeature'
-const featureConfigPollIntervalInMs = 30 * 60 * 1000 // 30 mins
+const featureConfigPollIntervalInMs = 7 * 60 * 1000 // 7 mins
 
 // TODO: add real feature later
 export const featureDefinitions = new Map([
@@ -38,11 +38,12 @@ export class FeatureConfigProvider {
     }
 
     async fetchFeatureConfigs(): Promise<void> {
+        getLogger().info('INV: start fetching feature configs')
         if (AuthUtil.instance.isConnectionExpired()) {
             return
         }
 
-        getLogger().debug('CodeWhisperer: Fetching feature configs')
+        getLogger().info('CodeWhisperer: Fetching feature configs')
         try {
             const response = await client.listFeatureEvaluations()
 
@@ -54,7 +55,8 @@ export class FeatureConfigProvider {
                 )
             })
         } catch (e) {
-            getLogger().debug('CodeWhisperer: Error when fetching feature configs', e)
+            getLogger().debug(`CodeWhisperer: Error when fetching feature configs ${e}`, e)
+            getLogger().info(`${e as string}`)
         }
         getLogger().debug(`CodeWhisperer: Current feature configs: ${this.getFeatureConfigsTelemetry()}`)
     }

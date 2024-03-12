@@ -156,6 +156,9 @@ export class SecondaryAuth<T extends Connection = Connection> {
     }
 
     public get isConnectionExpired() {
+        if (this.activeConnection) {
+            getLogger().info(`INV: active connection state ${this.auth.getConnectionState(this.activeConnection)}`)
+        }
         return !!this.activeConnection && this.auth.getConnectionState(this.activeConnection) === 'invalid'
     }
 
@@ -234,8 +237,10 @@ export class SecondaryAuth<T extends Connection = Connection> {
     // Used to lazily restore persisted connections.
     // Kind of clunky. We need an async module loader layer to make things ergonomic.
     public readonly restoreConnection: () => Promise<T | undefined> = once(async () => {
+        getLogger().info('INV: restoreConnection start')
         try {
             await this.auth.tryAutoConnect()
+            getLogger().info('INV: tryAutoConnect done')
             this.#savedConnection = await this.loadSavedConnection()
             this.#onDidChangeActiveConnection.fire(this.activeConnection)
 

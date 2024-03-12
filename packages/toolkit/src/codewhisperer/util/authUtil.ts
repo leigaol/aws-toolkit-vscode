@@ -254,8 +254,9 @@ export class AuthUtil {
     }
 
     public async getBearerToken(): Promise<string> {
+        getLogger().info('INV: getBearerToken start')
         await this.restore()
-
+        getLogger().info('INV: restore done')
         if (this.conn === undefined) {
             throw new ToolkitError('No connection found', { code: 'NoConnection' })
         }
@@ -264,6 +265,7 @@ export class AuthUtil {
             throw new ToolkitError('Connection is not an SSO connection', { code: 'BadConnectionType' })
         }
 
+        getLogger().info('INV: getBearerToken getToken start')
         const bearerToken = await this.conn.getToken()
         return bearerToken.accessToken
     }

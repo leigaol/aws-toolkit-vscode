@@ -83,17 +83,20 @@ export class SsoAccessTokenProvider {
     }
 
     public async getToken(): Promise<SsoToken | undefined> {
+        getLogger().info(`Starts loading token`)
         const data = await this.cache.token.load(this.tokenCacheKey)
-
+        getLogger().info(`Loaded token`)
         if (!data || !isExpired(data.token)) {
             return data?.token
         }
 
         if (data.registration && !isExpired(data.registration) && hasProps(data.token, 'refreshToken')) {
+            getLogger().info(`Starts refreshing token`)
             const refreshed = await this.refreshToken(data.token, data.registration)
 
             return refreshed.token
         } else {
+            getLogger().info(`invalidates token`)
             await this.invalidate()
         }
     }

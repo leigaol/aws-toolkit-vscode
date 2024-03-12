@@ -453,6 +453,7 @@ export class Auth implements AuthService, ConnectionManager {
      * before the local token(s) are cleared as they are needed in the request.
      */
     private async invalidateConnection(id: Connection['id'], opt?: { skipGlobalLogout?: boolean }) {
+        getLogger().info(`invalidateConnection ${id}`)
         const profile = this.store.getProfileOrThrow(id)
 
         if (profile.type === 'sso') {
@@ -473,11 +474,12 @@ export class Auth implements AuthService, ConnectionManager {
         } else if (profile.type === 'iam') {
             globals.loginManager.store.invalidateCredentials(fromString(id))
         }
-
+        getLogger().info(`INV: Set connection state of ${id} to invalid`)
         await this.updateConnectionState(id, 'invalid')
     }
 
     private async updateConnectionState(id: Connection['id'], connectionState: ProfileMetadata['connectionState']) {
+        getLogger().info(`INV: updateConnectionState ${id} to ${connectionState}`)
         const oldProfile = this.store.getProfileOrThrow(id)
         if (oldProfile.metadata.connectionState === connectionState) {
             return oldProfile
@@ -501,8 +503,10 @@ export class Auth implements AuthService, ConnectionManager {
     private async validateConnection<T extends Profile>(id: Connection['id'], profile: StoredProfile<T>) {
         const runCheck = async () => {
             if (profile.type === 'sso') {
+                getLogger().info(`INV: validateConnection start for sso conn ${id}`)
                 const provider = this.getTokenProvider(id, profile)
                 if ((await provider.getToken()) === undefined) {
+                    getLogger().info(`INV: validateConnection Set connection state of ${id} to invalid`)
                     return this.updateConnectionState(id, 'invalid')
                 } else {
                     return this.updateConnectionState(id, 'valid')
@@ -528,6 +532,7 @@ export class Auth implements AuthService, ConnectionManager {
 
                     return this.store.getProfileOrThrow(id)
                 } else {
+                    getLogger().info(`INV: handleValidationError set invalid`)
                     return this.updateConnectionState(id, 'invalid')
                 }
             }
@@ -539,6 +544,7 @@ export class Auth implements AuthService, ConnectionManager {
     private async handleValidationError(id: Connection['id'], err: unknown) {
         this.#validationErrors.set(id, UnknownError.cast(err))
 
+        getLogger().info(`INV: handleValidationError set invalid ${err}`)
         return this.updateConnectionState(id, 'invalid')
     }
 
@@ -737,6 +743,7 @@ export class Auth implements AuthService, ConnectionManager {
     private async handleInvalidCredentials<T>(id: Connection['id'], refresh: () => Promise<T>): Promise<T> {
         const profile = this.store.getProfile(id)
         const previousState = profile?.metadata.connectionState
+        getLogger().info(`INV: handleInvalidCredentials set ${id} to invalid`)
         await this.updateConnectionState(id, 'invalid')
 
         if (previousState === 'invalid') {
