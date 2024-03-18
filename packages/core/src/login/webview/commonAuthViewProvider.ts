@@ -108,7 +108,7 @@ export class CommonAuthViewProvider implements WebviewViewProvider {
 					<title>Base View Extension</title>
 				</head>
 				<body>
-                     
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.4/vue.global.prod.min.js"></script> 
 					<script>
 						const vscode = acquireVsCodeApi();
 					</script>
