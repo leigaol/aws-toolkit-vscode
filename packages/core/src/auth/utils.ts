@@ -569,6 +569,15 @@ export class AuthNode implements TreeNode<Auth> {
             getLogger().error('tryAutoConnect failed: %s', (e as Error).message)
         })
 
+        if (DevSettings.instance.isNewLoginEnabled()) {
+            if (!this.resource.hasConnections) {
+                void vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
+            } else {
+                void vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', false)
+            }
+            return new vscode.TreeItem(`Connect to ${getIdeProperties().company} to Get Started...`)
+        }
+
         if (!this.resource.hasConnections) {
             const item = new vscode.TreeItem(`Connect to ${getIdeProperties().company} to Get Started...`)
             const source: AuthSource = 'authNode'
