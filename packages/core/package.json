@@ -681,7 +681,7 @@
                     "id": "amazonq",
                     "title": "%AWS.amazonq.title%",
                     "icon": "resources/amazonq-logo.svg",
-                    "when": "!aws.dev.newLoginEnabled"
+                    "when": "false"
                 }
             ],
             "panel": [
@@ -703,7 +703,7 @@
                     "type": "webview",
                     "id": "aws.AmazonQChatView",
                     "name": "%AWS.amazonq.chat%",
-                    "when": "!isCloud9 && !aws.isSageMaker && !aws.dev.newLoginEnabled"
+                    "when": "false"
                 },
                 {
                     "id": "aws.AmazonQNeverShowBadge",
@@ -720,7 +720,7 @@
                 {
                     "id": "aws.codewhisperer",
                     "name": "%AWS.codewhisperer.explorerTitle%",
-                    "when": "!aws.dev.newLoginEnabled"
+                    "when": "false"
                 },
                 {
                     "id": "aws.explorer",

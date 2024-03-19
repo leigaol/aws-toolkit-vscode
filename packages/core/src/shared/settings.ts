@@ -752,10 +752,6 @@ export class DevSettings extends Settings.define('aws.dev', devSettings) {
         return Object.keys(this.activeSettings).length > 0
     }
 
-    public isNewLoginEnabled(): boolean {
-        return true
-    }
-
     public getServiceConfig<T extends ServiceClients>(
         devSetting: T,
         defaultConfig: ServiceTypeMap[T]

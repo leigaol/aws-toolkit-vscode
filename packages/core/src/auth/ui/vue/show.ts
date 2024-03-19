@@ -54,7 +54,6 @@ import { debounce } from 'lodash'
 import { submitFeedback } from '../../../feedback/vue/submitFeedback'
 import { InvalidGrantException } from '@aws-sdk/client-sso-oidc'
 import { isWeb } from '../../../common/webUtils'
-import { DevSettings } from '../../../shared/settings'
 
 export class AuthWebview extends VueWebview {
     public static readonly sourcePath: string = 'src/auth/ui/vue/index.js'
@@ -746,10 +745,7 @@ export const showManageConnections = Commands.declare(
         if (!isServiceItemId(serviceToShow)) {
             serviceToShow = undefined
         }
-        if (DevSettings.instance.isNewLoginEnabled()) {
-            return vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
-        }
-        return showAuthWebview(context, source, serviceToShow)
+        return vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
     }
 )
 

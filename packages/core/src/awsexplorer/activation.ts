@@ -27,11 +27,10 @@ import { cdkNode, refreshCdkExplorer } from '../cdk/explorer/rootNode'
 import { CodeCatalystRootNode } from '../codecatalyst/explorer'
 import { CodeCatalystAuthenticationProvider } from '../codecatalyst/auth'
 import { S3FolderNode } from '../s3/explorer/s3FolderNode'
-import { amazonQNode, refreshAmazonQ, refreshAmazonQRootNode } from '../amazonq/explorer/amazonQNode'
+import { refreshAmazonQ, refreshAmazonQRootNode } from '../amazonq/explorer/amazonQNode'
 import { GlobalState } from '../shared/globalState'
 import { activateViewsShared, registerToolView } from './activationShared'
 import { amazonQMigrationNode } from './amazonQMigrationNode'
-import { DevSettings } from '../shared/settings'
 
 /**
  * Activates the AWS Explorer UI and related functionality.
@@ -109,7 +108,7 @@ export async function activate(args: {
     const amazonQViewNode: ToolView[] = []
     if (!isCloud9()) {
         amazonQViewNode.push({
-            nodes: [DevSettings.instance.isNewLoginEnabled() ? amazonQMigrationNode : amazonQNode],
+            nodes: [amazonQMigrationNode],
             view: 'aws.amazonq',
             refreshCommands: [refreshAmazonQ, refreshAmazonQRootNode],
         })

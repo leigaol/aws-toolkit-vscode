@@ -154,17 +154,14 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
         ctx.subscriptions.push(watchBetaVSIX(config.betaUrl))
     }
 
-    if (DevSettings.instance.isNewLoginEnabled()) {
-        await vscode.commands.executeCommand('setContext', 'aws.dev.newLoginEnabled', true)
-        const toolkitAuthProvider = new CommonAuthViewProvider(ctx, undefined, 'TOOLKIT')
-        ctx.subscriptions.push(
-            vscode.window.registerWebviewViewProvider(CommonAuthViewProvider.viewType, toolkitAuthProvider, {
-                webviewOptions: {
-                    retainContextWhenHidden: true,
-                },
-            })
-        )
-    }
+    const toolkitAuthProvider = new CommonAuthViewProvider(ctx, undefined, 'TOOLKIT')
+    ctx.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(CommonAuthViewProvider.viewType, toolkitAuthProvider, {
+            webviewOptions: {
+                retainContextWhenHidden: true,
+            },
+        })
+    )
 }
 
 async function openMenu(ctx: vscode.ExtensionContext, options: typeof menuOptions): Promise<void> {

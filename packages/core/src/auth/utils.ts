@@ -577,9 +577,7 @@ export class AuthNode implements TreeNode<Auth> {
                 command: showConnectionsPageCommand,
                 arguments: [placeholder, source],
             }
-            if (DevSettings.instance.isNewLoginEnabled()) {
-                void vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
-            }
+            void vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
             return item
         }
         void vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', false)
