@@ -4,3 +4,4 @@
  */
 
 export { awsToolkitActivate, awsToolkitDeactivate } from './extension'
+export { AuthUtil } from './codewhisperer/util/authUtil'

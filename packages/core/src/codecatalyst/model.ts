@@ -272,7 +272,7 @@ export async function openDevEnv(
 // in connecting to the devenv
 export const codeCatalystConnectCommand = Commands.register(
     {
-        id: '_aws.codecatalyst.connect',
+        id: '__aws.codecatalyst.connect',
         telemetryName: 'codecatalyst_connect',
     },
     openDevEnv

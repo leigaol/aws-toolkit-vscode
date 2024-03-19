@@ -211,7 +211,7 @@ export class Commands {
         const previous = this.resources.get(resource.id)
 
         if (previous !== undefined) {
-            throw new Error(`Command "${resource.id}" has already been declared by the Toolkit`)
+            return resource
         }
 
         this.resources.set(resource.id, resource)
@@ -334,7 +334,9 @@ class CommandResource<T extends Callback = Callback, U extends any[] = any[]> {
             }
             return runCommand(target, info)
         }
-        this.subscription = this.commands.registerCommand(this.resource.info.id, instrumented)
+        if (!this.registered) {
+            this.subscription = this.commands.registerCommand(this.resource.info.id, instrumented)
+        }
 
         return this
     }
