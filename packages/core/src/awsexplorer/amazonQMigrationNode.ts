@@ -13,38 +13,38 @@ import { getIcon } from '../shared/icons'
 const localize = nls.loadMessageBundle()
 // TODO: Implement the commands
 
-const dismissCommand = Commands.declare('aws.amazonq.dismiss', () => () => {})
+const dismissCommand = Commands.declare('aws.amazonq_migrate.dismiss', () => () => {})
 
-const openChatPanel = Commands.declare('aws.amazonq.openChatPanel', () => () => {})
+const openChatPanel = Commands.declare('aws.amazonq_migrate.openChatPanel', () => () => {})
 
-const menuMoved = Commands.declare('aws.amazonq.menuMoved', () => () => {})
+const menuMoved = Commands.declare('aws.amazonq_migrate.menuMoved', () => () => {})
 
-const installQCommand = Commands.declare('aws.amazonq.install', () => () => {})
+const installQCommand = Commands.declare('aws.amazonq_migrate.install', () => () => {})
 
 const createDismissNode = () =>
     dismissCommand.build().asTreeNode({
-        label: localize('AWS.amazonq.dismiss', 'Dismiss'),
+        label: localize('AWS.amazonq_migrate.dismiss', 'Dismiss'),
         iconPath: getIcon('vscode-error'),
         contextValue: '',
     })
 
 const createInstallQNode = () =>
     installQCommand.build().asTreeNode({
-        label: localize('AWS.amazonq.install', 'Install the Amazon Q Extension'),
+        label: localize('AWS.amazonq_migrate.install', 'Install the Amazon Q Extension'),
         iconPath: getIcon('vscode-add'),
         contextValue: '',
     })
 
 const createOpenChatPanelNode = () =>
     openChatPanel.build().asTreeNode({
-        label: localize('AWS.amazonq.openChatPanel', 'Open Q Chat Panel'),
+        label: localize('AWS.amazonq_migrate.openChatPanel', 'Open Q Chat Panel'),
         iconPath: getIcon('vscode-add'),
         contextValue: '',
     })
 
 const createMenuMovedNode = () =>
     menuMoved.build().asTreeNode({
-        label: localize('AWS.amazonq.menuMoved', 'Menu MOved'),
+        label: localize('AWS.amazonq_migrate.menuMoved', 'Menu MOved'),
         iconPath: getIcon('vscode-add'),
         contextValue: '',
     })
