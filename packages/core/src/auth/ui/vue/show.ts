@@ -6,7 +6,7 @@
  * for the webview to be shown.
  */
 import globals from '../../../shared/extensionGlobals'
-import { getIdeProperties, isCloud9 } from '../../../shared/extensionUtilities'
+import { isCloud9 } from '../../../shared/extensionUtilities'
 import { VueWebview } from '../../../webviews/main'
 import * as vscode from 'vscode'
 import {
@@ -703,10 +703,6 @@ export function buildCommaDelimitedString(strings: Iterable<string>): string {
     return sorted.join(',')
 }
 
-const Panel = VueWebview.compilePanel(AuthWebview)
-let activePanel: InstanceType<typeof Panel> | undefined
-let subscriptions: vscode.Disposable[] | undefined
-
 /**
  * Different places the Add Connection command could be executed from.
  *
@@ -748,52 +744,6 @@ export const showManageConnections = Commands.declare(
         return vscode.commands.executeCommand('setContext', 'aws.dev.showAuthView', true)
     }
 )
-
-async function showAuthWebview(
-    ctx: vscode.ExtensionContext,
-    source: AuthSource,
-    serviceToShow?: ServiceItemId
-): Promise<void> {
-    let wasInitialServiceSet = false
-    if (activePanel && serviceToShow) {
-        // Webview is already open, so we have to select the service
-        // through an event
-        activePanel.server.onDidSelectService.fire(serviceToShow)
-        wasInitialServiceSet = true
-    }
-
-    activePanel ??= new Panel(ctx, CodeCatalystAuthenticationProvider.fromContext(ctx))
-
-    if (!wasInitialServiceSet && serviceToShow) {
-        // Webview does not exist yet, preemptively set
-        // the initial service to show
-        activePanel.server.setInitialService(serviceToShow)
-    }
-
-    activePanel.server.setSource(source)
-    activePanel.server.setupConnectionChangeEmitter()
-
-    const webview = await activePanel!.show({
-        title: `${getIdeProperties().company} Toolkit: Add Connection to AWS`,
-        viewColumn: isCloud9() ? vscode.ViewColumn.One : vscode.ViewColumn.Active,
-        retainContextWhenHidden: true,
-    })
-
-    if (!subscriptions) {
-        subscriptions = [
-            webview.onDidDispose(() => {
-                if (activePanel) {
-                    emitWebviewClosed(activePanel.server).catch(e => {
-                        getLogger().error('emitWebviewClosed failed: %s', (e as Error).message)
-                    })
-                }
-                vscode.Disposable.from(...(subscriptions ?? [])).dispose()
-                activePanel = undefined
-                subscriptions = undefined
-            }),
-        ]
-    }
-}
 
 /**
  * The metric emitted when the webview is closed by the user.

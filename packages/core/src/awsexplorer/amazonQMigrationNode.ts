@@ -19,7 +19,11 @@ const openChatPanel = Commands.declare('aws.amazonq_migrate.openChatPanel', () =
 
 const menuMoved = Commands.declare('aws.amazonq_migrate.menuMoved', () => () => {})
 
-const installQCommand = Commands.declare('aws.amazonq_migrate.install', () => () => {})
+const installQCommand = Commands.declare('aws.amazonq_migrate.install', () => async () => {
+    await vscode.env.openExternal(
+        vscode.Uri.parse('https://marketplace.visualstudio.com/items?itemName=AmazonWebServices.amazon-q-vscode')
+    )
+})
 
 const createDismissNode = () =>
     dismissCommand.build().asTreeNode({

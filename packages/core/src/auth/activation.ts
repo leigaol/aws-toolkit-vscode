@@ -15,6 +15,7 @@ import { isCloud9 } from '../shared/extensionUtilities'
 import { isInDevEnv } from '../codecatalyst/utils'
 import { showManageConnections } from './ui/vue/show'
 import { isWeb } from '../common/webUtils'
+import { CommonAuthViewProvider } from '../login/webview/commonAuthViewProvider'
 
 export async function initialize(
     extensionContext: vscode.ExtensionContext,
@@ -32,6 +33,14 @@ export async function initialize(
 
     extensionContext.subscriptions.push(showManageConnections.register(extensionContext))
 
+    const toolkitAuthProvider = new CommonAuthViewProvider(extensionContext, undefined, 'TOOLKIT')
+    extensionContext.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(CommonAuthViewProvider.viewType, toolkitAuthProvider, {
+            webviewOptions: {
+                retainContextWhenHidden: true,
+            },
+        })
+    )
     await showManageConnectionsOnStartup()
 }
 
