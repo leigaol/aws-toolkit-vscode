@@ -57,8 +57,14 @@ import {
     switchToAmazonQCommand,
 } from './amazonq/explorer/amazonQChildrenNodes'
 import { AuthUtil, isPreviousQUser } from './codewhisperer/util/authUtil'
-import { connectWithCustomization, installAmazonQExtension } from './codewhisperer/commands/basicCommands'
+import {
+    connectWithCustomization,
+    getTelemetryClientId,
+    installAmazonQExtension,
+} from './codewhisperer/commands/basicCommands'
 import { isExtensionActive, isExtensionInstalled, VSCODE_EXTENSION_ID } from './shared/utilities'
+import { Commands } from './shared'
+import { getClientId } from './shared/telemetry/util'
 
 let localize: nls.LocalizeFunc
 
@@ -211,7 +217,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
                         return globals.uriHandler.handleUri(uri)
                     }),
-            })
+            }),
+            getTelemetryClientId.register(context.globalState)
         )
 
         showWelcomeMessage(context)
@@ -228,6 +235,17 @@ export async function activate(context: vscode.ExtensionContext) {
         // Register the aws.CodeWhisperer.connect command if Amazon Q is not active
         if (!isExtensionInstalled(VSCODE_EXTENSION_ID.amazonq) || !isExtensionActive(VSCODE_EXTENSION_ID.amazonq)) {
             context.subscriptions.push(connectWithCustomization()?.register() ?? { dispose() {} })
+        }
+
+        // after toolkit is activated, ask Amazon Q to set its client id
+        // this command returns the Amazon Q's client id
+        const amazonQClientId = await Commands.tryExecute(
+            'aws.amazonq.setTelemetryClientId',
+            getClientId(context.globalState)
+        )
+        if (amazonQClientId && amazonQClientId !== getClientId(context.globalState)) {
+            getLogger().debug(`Amazon Q is already using a different client id`)
+            await context.globalState.update('telemetryClientId', amazonQClientId)
         }
     } catch (error) {
         const stacktrace = (error as Error).stack?.split('\n')

@@ -40,6 +40,7 @@ import {
     signoutCodeWhisperer,
     fetchFeatureConfigsCmd,
     registerToolkitApiCallback,
+    setupTelemetryClientId,
 } from './commands/basicCommands'
 import { sleep } from '../shared/utilities/timeoutUtils'
 import { ReferenceLogViewProvider } from './service/referenceLogViewProvider'
@@ -103,6 +104,7 @@ export async function activate(context: ExtContext): Promise<void> {
     context.extensionContext.subscriptions.push(
         // register toolkit api callback
         registerToolkitApiCallback.register(),
+        setupTelemetryClientId.register(context.extensionContext.globalState),
         signoutCodeWhisperer.register(auth),
         refreshToolkitQState.register(),
         /**
@@ -462,6 +464,7 @@ export async function activate(context: ExtContext): Promise<void> {
     }
 
     await Commands.tryExecute('aws.amazonq.refreshConnectionCallback')
+    await Commands.tryExecute('aws.amazonq.setupTelemetryClientId')
     container.ready()
 }
 

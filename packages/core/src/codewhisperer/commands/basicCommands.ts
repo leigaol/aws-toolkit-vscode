@@ -35,6 +35,8 @@ import { TelemetryHelper } from '../util/telemetryHelper'
 import { Auth, AwsConnection } from '../../auth'
 import { once } from '../../shared/utilities/functionUtils'
 import { isTextEditor } from '../../shared/utilities/editorUtilities'
+import { getClientId } from '../../shared/telemetry/util'
+import { randomUUID } from 'crypto'
 
 export const toggleCodeSuggestions = Commands.declare(
     { id: 'aws.codeWhisperer.toggleCodeSuggestion', compositeKey: { 1: 'source' } },
@@ -440,6 +442,49 @@ export const registerToolkitApiCallback = Commands.declare(
             if (_toolkitApi) {
                 await registerToolkitApiCallbackOnce()
             }
+        }
+    }
+)
+
+/** This command is registered by Amazon Q.
+ *  Amazon Q invokes this command at activation to setup its client id.
+ *  Returns the telemetry client id of Amazon Q.
+ */
+export const setupTelemetryClientId = Commands.declare(
+    { id: 'aws.amazonq.setupTelemetryClientId' },
+    (globalState: vscode.Memento) => async () => {
+        try {
+            let clientId = await getTelemetryClientId.execute()
+            if (clientId) {
+                await globalState.update('telemetryClientId', clientId)
+            } else {
+                clientId = randomUUID()
+                await globalState.update('telemetryClientId', clientId)
+            }
+        } catch (error) {
+            const clientId = undefined
+            getLogger().error('Failed to set client id. Reason: %O ', error)
+            return clientId
+        }
+    }
+)
+/** This command is registered by AWS Toolkit
+ *  Amazon Q should invoke this command to get the telemetry client id
+ * of Amazon Q when it activates.
+ * Returns a valid client id of AWS Toolkit or undefined if it does not exist.
+ * It will NOT return the hardcoded client id for test automation, telemetry disabled, etc.
+ */
+export const getTelemetryClientId = Commands.declare(
+    { id: 'aws.toolkit.getTelemetryClientId' },
+    (globalState: vscode.Memento) => async () => {
+        try {
+            await getClientId(globalState)
+            const clientId = globalState.get<string>('telemetryClientId')
+            return clientId
+        } catch (error) {
+            const clientId = undefined
+            getLogger().error('Failed to set client id. Reason: %O ', error)
+            return clientId
         }
     }
 )
