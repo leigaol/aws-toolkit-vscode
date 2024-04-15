@@ -11,6 +11,7 @@ import {
     TextDocument,
 } from '@amzn/codewhisperer-streaming'
 import { TriggerPayload } from '../model'
+import { realFileContext } from '../../../editor/context/project/fileIndex'
 
 const fqnNameSizeDownLimit = 1
 const fqnNameSizeUpLimit = 256
@@ -57,7 +58,6 @@ export function triggerPayloadToChatRequest(triggerPayload: TriggerPayload): Gen
                 documentSymbolFqns.push(elem)
             }
         })
-
         let programmingLanguage
         if (
             triggerPayload.fileLanguage !== undefined &&
@@ -69,7 +69,7 @@ export function triggerPayloadToChatRequest(triggerPayload: TriggerPayload): Gen
 
         document = {
             relativeFilePath: triggerPayload.filePath ? triggerPayload.filePath.substring(0, filePathSizeLimit) : '',
-            text: triggerPayload.fileText,
+            text: realFileContext(triggerPayload),
             programmingLanguage: programmingLanguage,
             documentSymbols: documentSymbolFqns,
         }

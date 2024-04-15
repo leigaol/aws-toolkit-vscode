@@ -63,6 +63,7 @@ import { SecurityIssueCodeActionProvider } from './service/securityIssueCodeActi
 import { listCodeWhispererCommands } from './ui/statusBarMenu'
 import { updateUserProxyUrl } from './client/agent'
 import { Container } from './service/serviceContainer'
+import { setProjectIndex } from '../codewhispererChat/editor/context/project/fileIndex'
 
 export async function activate(context: ExtContext): Promise<void> {
     const codewhispererSettings = CodeWhispererSettings.instance
@@ -259,11 +260,14 @@ export async function activate(context: ExtContext): Promise<void> {
         vscode.languages.registerCodeActionsProvider(
             [...CodeWhispererConstants.platformLanguageIds],
             SecurityIssueCodeActionProvider.instance
-        )
+        ),
+        vscode.workspace.onDidChangeWorkspaceFolders(() => {
+            void setProjectIndex()
+        })
     )
 
     await auth.restore()
-
+    void setProjectIndex()
     if (auth.isConnectionExpired()) {
         auth.showReauthenticatePrompt().catch(e => {
             getLogger().error('showReauthenticatePrompt failed: %s', (e as Error).message)
