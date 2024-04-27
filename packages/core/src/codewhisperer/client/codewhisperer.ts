@@ -32,14 +32,16 @@ import { getClientId } from '../../shared/telemetry/util'
 import { extensionVersion, getServiceEnvVarConfig } from '../../shared/vscode/env'
 import { DevSettings } from '../../shared/settings'
 
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 export interface CodeWhispererConfig {
     readonly region: string
     readonly endpoint: string
 }
 
 export const defaultServiceConfig: CodeWhispererConfig = {
-    region: 'us-east-1',
-    endpoint: 'https://codewhisperer.us-east-1.amazonaws.com/',
+    region: 'us-west-2',
+    endpoint: 'https://rts.alpha-us-west-2.codewhisperer.ai.aws.dev/',
 }
 
 export function getCodewhispererConfig(): CodeWhispererConfig {
