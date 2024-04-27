@@ -176,7 +176,7 @@ export async function activate(context: ExtContext): Promise<void> {
             if (id === 'codewhisperer') {
                 await vscode.commands.executeCommand(
                     'workbench.action.openSettings',
-                    `@id:aws.amazonQ.includeSuggestionsWithCodeReferences`
+                    `@id:aws.amazonQ.showInlineCodeSuggestionsWithCodeReferences`
                 )
             } else {
                 await vscode.commands.executeCommand('workbench.action.openSettings', `aws.amazonQ`)
