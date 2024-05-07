@@ -70,6 +70,7 @@ import { securityScanLanguageContext } from './util/securityScanLanguageContext'
 import { registerWebviewErrorHandler } from '../webviews/server'
 import { logAndShowWebviewError } from '../shared/utilities/logAndShowUtils'
 import { openSettings } from '../shared/settings'
+import { CrossFileActiveTracker } from './util/supplementalContext/crossFileActiveTracker'
 
 let localize: nls.LocalizeFunc
 
@@ -456,6 +457,7 @@ export async function activate(context: ExtContext): Promise<void> {
          */
         context.extensionContext.subscriptions.push(
             vscode.window.onDidChangeActiveTextEditor(async editor => {
+                CrossFileActiveTracker.instance.onDucmentChange(editor)
                 await RecommendationHandler.instance.onEditorChange()
             }),
             vscode.window.onDidChangeWindowState(async e => {
@@ -591,6 +593,7 @@ export async function activate(context: ExtContext): Promise<void> {
     }
 
     await Commands.tryExecute('aws.amazonq.refreshConnectionCallback')
+    CrossFileActiveTracker.instance.onActivationFinish()
     container.ready()
 }
 

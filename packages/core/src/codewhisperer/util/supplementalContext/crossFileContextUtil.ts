@@ -16,6 +16,7 @@ import { getFileDistance } from '../../../shared/filesystemUtilities'
 import { getOpenFilesInWindow } from '../../../shared/utilities/editorUtilities'
 import { getLogger } from '../../../shared/logger/logger'
 import { CodeWhispererSupplementalContext, CodeWhispererSupplementalContextItem } from '../../models/model'
+import { CrossFileActiveTracker } from './crossFileActiveTracker'
 
 type CrossFileSupportedLanguage =
     | 'java'
@@ -68,7 +69,7 @@ export async function fetchSupplementalContextForSrc(
 
     const codeChunksCalculated = crossFileContextConfig.numberOfChunkToFetch
 
-    // Step 1: Get relevant cross files to refer
+    // Step 1: Get relevant cross files in open tabs to refer
     const relevantCrossFilePaths = await getCrossFileCandidates(editor)
     throwIfCancelled(cancellationToken)
 
@@ -233,7 +234,9 @@ export async function getCrossFileCandidates(editor: vscode.TextEditor): Promise
             !(await isTestFile(candidateFile, { languageId: language }))
         )
     })
-
+    // rank open tab files by its visit order.
+    // most recevent visit comes first.
+    // break ties using file distance
     return unsortedCandidates
         .map(candidate => {
             return {
@@ -242,7 +245,9 @@ export async function getCrossFileCandidates(editor: vscode.TextEditor): Promise
             }
         })
         .sort((file1, file2) => {
-            return file1.fileDistance - file2.fileDistance
+            const recentVisit1 = CrossFileActiveTracker.instance.getCrossFileSortKey(file1.file)
+            const recentVisit2 = CrossFileActiveTracker.instance.getCrossFileSortKey(file2.file)
+            return (recentVisit2 - recentVisit1) * 1000 + file1.fileDistance - file2.fileDistance
         })
         .map(fileToDistance => {
             return fileToDistance.file
