@@ -77,20 +77,36 @@ export async function fetchSupplementalContextForSrc(
     // We restrict the total number of chunks to improve on latency.
     // Chunk linking is required as we want to pass the next chunk value for matched chunk.
     let chunkList: Chunk[] = []
-    for (const relevantFile of relevantCrossFilePaths) {
+
+    const addToChunkList = async (file: string) => {
         throwIfCancelled(cancellationToken)
-        const chunks: Chunk[] = await splitFileToChunks(relevantFile, crossFileContextConfig.numberOfLinesEachChunk)
+        const chunks: Chunk[] = await splitFileToChunks(file, crossFileContextConfig.numberOfLinesEachChunk)
         const linkedChunks = linkChunks(chunks)
         chunkList.push(...linkedChunks)
+    }
+
+    for (const relevantFile of relevantCrossFilePaths) {
+        await addToChunkList(relevantFile)
         if (chunkList.length >= codeChunksCalculated) {
             break
+        }
+    }
+    // Step 3: Add neighbor files if there isn't enough chunks from open tabs
+    if (chunkList.length < codeChunksCalculated) {
+        const neighborFileIterator = listNeighborFiles(editor, relevantCrossFilePaths)
+        for await (const neighborFile of neighborFileIterator) {
+            await addToChunkList(neighborFile)
+            console.log(neighborFile)
+            if (chunkList.length >= codeChunksCalculated) {
+                break
+            }
         }
     }
 
     // it's required since chunkList.push(...) is likely giving us a list of size > 60
     chunkList = chunkList.slice(0, codeChunksCalculated)
 
-    // Step 3: Generate Input chunk (10 lines left of cursor position)
+    // Step 4: Generate Input chunk (10 lines left of cursor position)
     // and Find Best K chunks w.r.t input chunk using BM25
     const inputChunk: Chunk = getInputChunk(editor, crossFileContextConfig.numberOfLinesEachChunk)
     const bestChunks: Chunk[] = findBestKChunkMatches(inputChunk, chunkList, crossFileContextConfig.topK)
@@ -257,5 +273,149 @@ export async function getCrossFileCandidates(editor: vscode.TextEditor): Promise
 function throwIfCancelled(token: vscode.CancellationToken): void | never {
     if (token.isCancellationRequested) {
         throw new ToolkitError(supplemetalContextFetchingTimeoutMsg, { cause: new CancellationError('timeout') })
+    }
+}
+
+/**
+ * Iterators the neightbor files of current file.
+ * Neightbor files is defined as files that has file distance <= 2
+ * Example: 
+ * A: root/util/context/a.ts
+   B: root/util/b.ts
+   C: root/util/service/c.ts
+   D: root/d.ts
+   E: root/util/context/e.ts
+ * Dist(A,B) = 1, Dist(A,C) = 2, Dist(A, D) = 2, Dist(A, E) = 0
+ * First iterate dist = 0, then dist = 1, then dist = 2
+ * For dist = 1, first iterate parent folder, then subfolder.
+ * 
+*/
+
+export async function* listNeighborFiles(
+    editor: vscode.TextEditor,
+    excludeFiles: string[]
+): AsyncIterableIterator<string> {
+    if (!vscode.workspace.workspaceFolders) {
+        return
+    }
+    const targetFile = editor.document.uri.fsPath
+    const language = editor.document.languageId as CrossFileSupportedLanguage
+    const dialects = supportedLanguageToDialects[language]
+    const excludeFilesSet = new Set(excludeFiles)
+
+    const isCandidate = async (candidateFile: string) => {
+        return (
+            targetFile !== candidateFile &&
+            !excludeFilesSet.has(candidateFile) &&
+            (path.extname(targetFile) === path.extname(candidateFile) ||
+                (dialects && dialects.has(path.extname(candidateFile)))) &&
+            !(await isTestFile(candidateFile, { languageId: language }))
+        )
+    }
+
+    const root = vscode.workspace.workspaceFolders[0].uri
+    // iterate file dist = 0
+    // For root/util/context/a.ts, iterate files context/*.ts
+    const targetFileDir = path.dirname(targetFile)
+    const fileDist0 = await fsCommon.readdir(targetFileDir)
+    const targetFileSubDirs = []
+    for (const file of fileDist0) {
+        const filePath = path.join(targetFileDir, file[0])
+        if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+            excludeFilesSet.add(filePath)
+            yield filePath
+        } else if (file[1] === vscode.FileType.Directory) {
+            targetFileSubDirs.push(filePath)
+        }
+    }
+
+    // iterate file dist = 1, parent
+    // For root/util/context/a.ts, iterate files util/*.ts
+    if (root.fsPath !== targetFileDir) {
+        const targetFileParentDir = path.dirname(targetFileDir)
+        const fileDist1 = await fsCommon.readdir(targetFileParentDir)
+        for (const file of fileDist1) {
+            const filePath = path.join(targetFileParentDir, file[0])
+            if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                excludeFilesSet.add(filePath)
+                yield filePath
+            }
+        }
+    }
+    // iterate file dist = 1, sub folders
+    // For root/util/context/a.ts, iterate all files under context/any_folder/*.ts
+    for (const targetFileSubDir of targetFileSubDirs) {
+        const fileDist1 = await fsCommon.readdir(targetFileSubDir)
+        for (const file of fileDist1) {
+            const filePath = path.join(targetFileSubDir, file[0])
+            if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                excludeFilesSet.add(filePath)
+                yield filePath
+            }
+        }
+    }
+
+    // iterate file dist = 2, parent parent, then parent sibling
+    // For root/util/context/a.ts, iterate all files root/*.ts, then root/any_folder/*.ts
+    if (root.fsPath !== targetFileDir && root.fsPath !== path.dirname(targetFileDir)) {
+        const targetFileParentParentDir = path.dirname(path.dirname(targetFileDir))
+        let fileDist2 = await fsCommon.readdir(targetFileParentParentDir)
+        const targetFileParentSiblingDirs = []
+        for (const file of fileDist2) {
+            const filePath = path.join(targetFileParentParentDir, file[0])
+            if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                excludeFilesSet.add(filePath)
+                yield filePath
+            } else if (file[1] === vscode.FileType.Directory) {
+                targetFileParentSiblingDirs.push(filePath)
+            }
+        }
+
+        for (const targetFileParentSiblingDir of targetFileParentSiblingDirs) {
+            let fileDist2 = await fsCommon.readdir(targetFileParentSiblingDir)
+            for (const file of fileDist2) {
+                const filePath = path.join(targetFileParentParentDir, file[0])
+                if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                    excludeFilesSet.add(filePath)
+                    yield filePath
+                }
+            }
+        }
+    }
+
+    // iterate file dist = 2, sibling
+    // For root/util/context/a.ts, iterate files root/util/any_folder/*.ts
+    if (root.fsPath !== targetFileDir) {
+        const targetFileParentDir = path.dirname(targetFileDir)
+        for (const _file of await fsCommon.readdir(targetFileParentDir)) {
+            const dirPath = path.join(targetFileParentDir, _file[0])
+            if (_file[1] === vscode.FileType.Directory) {
+                for (const file of await fsCommon.readdir(dirPath)) {
+                    const filePath = path.join(dirPath, file[0])
+                    if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                        excludeFilesSet.add(filePath)
+                        yield filePath
+                    }
+                }
+            }
+        }
+    }
+
+    // iterate file dist = 2, sub dir
+    // For root/util/context/a.ts, iterate files context/any_folder/any_folder/*.ts
+    for (const targetFileSubDir of targetFileSubDirs) {
+        const fileDist1 = await fsCommon.readdir(targetFileSubDir)
+        for (const file of fileDist1) {
+            const dirPath = path.join(targetFileSubDir, file[0])
+            if (file[1] === vscode.FileType.Directory) {
+                for (const file of await fsCommon.readdir(dirPath)) {
+                    const filePath = path.join(dirPath, file[0])
+                    if (file[1] === vscode.FileType.File && (await isCandidate(filePath))) {
+                        excludeFilesSet.add(filePath)
+                        yield filePath
+                    }
+                }
+            }
+        }
     }
 }
