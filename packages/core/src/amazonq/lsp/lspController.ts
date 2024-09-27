@@ -325,10 +325,9 @@ export class LspController {
                 0
             )
             getLogger().info(`LspController: Found ${files.length} files in current project ${getProjectPaths()}`)
-            const resp = await LspClient.instance.indexFiles(
+            const resp = await LspClient.instance.indexFilesV2(
                 files.map((f) => f.fileUri.fsPath),
-                projRoot,
-                false
+                projRoot
             )
             if (resp) {
                 getLogger().debug(`LspController: Finish building vector index of project`)

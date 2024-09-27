@@ -22,7 +22,10 @@ import {
     BuildIndexRequestType,
     GetUsageRequestType,
     IndexRequestType,
+    QueryBM25IndexRequestType,
+    QueryCodeMapIndexRequestType,
     QueryRequestType,
+    QueryVectorIndexRequestType,
     UpdateIndexRequestType,
     UpdateIndexV2RequestPayload,
     UpdateIndexV2RequestType,
@@ -90,17 +93,17 @@ export class LspClient {
 
     // todo: maynot need language? or it should send language[] instead
     // v2
-    async indexFilesV2(paths: string[], rootPath: string, language: string) {
+    async indexFilesV2(paths: string[], rootPath: string) {
+        const language = vscode.window.activeTextEditor?.document.languageId ?? 'plaintext'
         const payload: BuildIndexRequestPayload = {
             filePaths: paths,
             projectRoot: rootPath,
-            config: 'default',
+            config: 'all',
             language: language,
         }
         try {
             const encryptedRequest = await this.encrypt(JSON.stringify(payload))
             const resp = await this.client?.sendRequest(BuildIndexRequestType, encryptedRequest)
-            console.log(`indexFileV2 result: `, resp)
             return resp
         } catch (e) {
             getLogger().error(`LspClient: indexFilesV2 error: ${e}`)
@@ -135,6 +138,25 @@ export class LspClient {
                     query: query,
                 })
             }
+
+            const encrpted = await this.encrypt(request)
+
+            let resp: any = {}
+            switch (target) {
+                case 'bm25':
+                    resp = await this.client?.sendRequest(QueryBM25IndexRequestType, encrpted)
+                    break
+                case 'vector':
+                    resp = await this.client?.sendRequest(QueryVectorIndexRequestType, encrpted)
+                    break
+                case 'codemap':
+                    resp = await this.client?.sendRequest(QueryCodeMapIndexRequestType, encrpted)
+                    break
+                default:
+                    throw new Error(`invalid target: ${target}`)
+            }
+
+            return resp
         } catch (e) {
             getLogger().error(`LspClient: query error: ${e}`)
             return []
@@ -164,7 +186,7 @@ export class LspClient {
 
     // not yet account for file move
     // v2
-    async updateIndexV2(filePath: string[], mode: 'update' | 'delete' | 'create' | 'rename') {
+    async updateIndexV2(filePath: string[], mode: 'update' | 'remove' | 'add' | 'rename') {
         const payload: UpdateIndexV2RequestPayload = {
             filePaths: filePath,
             updateMode: mode,
@@ -270,9 +292,21 @@ export async function activate(extensionContext: ExtensionContext) {
                 void LspClient.instance.updateIndex(savedDocument.fsPath)
             }
         }),
-        vscode.workspace.onDidCreateFiles((e) => {}),
-        vscode.workspace.onDidDeleteFiles((e) => {}),
-        vscode.workspace.onDidRenameFiles((e) => {})
+        vscode.workspace.onDidCreateFiles((e) => {
+            void LspClient.instance.updateIndexV2(
+                e.files.map((f) => f.fsPath),
+                'add'
+            )
+        }),
+        vscode.workspace.onDidDeleteFiles((e) => {
+            void LspClient.instance.updateIndexV2(
+                e.files.map((f) => f.fsPath),
+                'remove'
+            )
+        }),
+        vscode.workspace.onDidRenameFiles((e) => {
+            // void LspClient.instance.updateIndexV2(e.files.map((f) => f.newUri.fsPath), 'rename')
+        })
     )
     return LspClient.instance.client.onReady().then(() => {
         const disposableFunc = { dispose: () => rangeFormatting?.dispose() as void }

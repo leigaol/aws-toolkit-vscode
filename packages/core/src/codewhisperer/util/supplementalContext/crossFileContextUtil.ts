@@ -16,6 +16,7 @@ import { getFileDistance } from '../../../shared/filesystemUtilities'
 import { getOpenFilesInWindow } from '../../../shared/utilities/editorUtilities'
 import { getLogger } from '../../../shared/logger/logger'
 import { CodeWhispererSupplementalContext, CodeWhispererSupplementalContextItem } from '../../models/model'
+import { LspClient } from '../../../amazonq'
 
 type CrossFileSupportedLanguage =
     | 'java'
@@ -92,6 +93,16 @@ export async function fetchSupplementalContextForSrc(
     // Step 3: Generate Input chunk (10 lines left of cursor position)
     // and Find Best K chunks w.r.t input chunk using BM25
     const inputChunk: Chunk = getInputChunk(editor, crossFileContextConfig.numberOfLinesEachChunk)
+    // TODO: remove
+    // ----------------------------
+    const cursorPosition = editor.selection.active
+    const startLine = Math.max(cursorPosition.line - 10, 0)
+    const endLine = Math.max(cursorPosition.line - 1, 0)
+    const inputChunkContent = editor.document.getText(
+        new vscode.Range(startLine, 0, endLine, editor.document.lineAt(endLine).text.length)
+    )
+    await LspClient.instance.queryV2(inputChunkContent, 'bm25')
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     const bestChunks: Chunk[] = findBestKChunkMatches(inputChunk, chunkList, crossFileContextConfig.topK)
     throwIfCancelled(cancellationToken)
 
