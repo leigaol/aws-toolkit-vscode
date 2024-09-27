@@ -306,6 +306,12 @@ export async function activate(extensionContext: ExtensionContext) {
         }),
         vscode.workspace.onDidRenameFiles((e) => {
             // void LspClient.instance.updateIndexV2(e.files.map((f) => f.newUri.fsPath), 'rename')
+        }),
+        vscode.workspace.onDidSaveTextDocument((document) => {
+            if (document.uri.scheme !== 'file') {
+                return
+            }
+            // void LspClient.instance.updateIndex(document.uri.fsPath)
         })
     )
     return LspClient.instance.client.onReady().then(() => {
