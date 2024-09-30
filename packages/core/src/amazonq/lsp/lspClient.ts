@@ -99,7 +99,7 @@ export class LspClient {
             filePaths: paths,
             projectRoot: rootPath,
             config: 'all',
-            language: language,
+            language: 'java',
         }
         try {
             const encryptedRequest = await this.encrypt(JSON.stringify(payload))
@@ -156,6 +156,23 @@ export class LspClient {
                     throw new Error(`invalid target: ${target}`)
             }
 
+            return resp
+        } catch (e) {
+            getLogger().error(`LspClient: query error: ${e}`)
+            return []
+        }
+    }
+
+    async queryBM25(query: string, path: string) {
+        try {
+            const request = JSON.stringify({
+                query: query,
+                filePath: path,
+            })
+
+            const encrpted = await this.encrypt(request)
+
+            let resp: any = await this.client?.sendRequest(QueryBM25IndexRequestType, encrpted)
             return resp
         } catch (e) {
             getLogger().error(`LspClient: query error: ${e}`)
@@ -289,7 +306,7 @@ export async function activate(extensionContext: ExtensionContext) {
     toDispose.push(
         vscode.window.onDidChangeActiveTextEditor((editor) => {
             if (savedDocument && editor && editor.document.uri.fsPath !== savedDocument.fsPath) {
-                void LspClient.instance.updateIndex(savedDocument.fsPath)
+                // void LspClient.instance.updateIndex(savedDocument.fsPath)
             }
         }),
         vscode.workspace.onDidCreateFiles((e) => {
@@ -311,6 +328,7 @@ export async function activate(extensionContext: ExtensionContext) {
             if (document.uri.scheme !== 'file') {
                 return
             }
+            void LspClient.instance.updateIndexV2([document.uri.fsPath], 'update')
             // void LspClient.instance.updateIndex(document.uri.fsPath)
         })
     )
