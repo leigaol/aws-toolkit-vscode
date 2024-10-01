@@ -81,3 +81,4 @@ export type QueryCodeMapIndexRequestPayload = { filePath: string }
 export const QueryCodeMapIndexRequestType: RequestType<QueryCodeMapIndexRequest, any, any> = new RequestType(
     'lsp/queryCodeMapIndex'
 )
+export type IndexConfig = 'all' | 'default'

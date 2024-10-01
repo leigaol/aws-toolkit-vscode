@@ -304,7 +304,7 @@ export class LspController {
     }
 
     async buildIndex() {
-        getLogger().info(`LspController: Starting to build vector index of project`)
+        getLogger().info(`LspController: Starting LSP`)
         const start = performance.now()
         const projPaths = getProjectPaths()
         projPaths.sort()
@@ -325,10 +325,11 @@ export class LspController {
                 0
             )
             getLogger().info(`LspController: Found ${files.length} files in current project ${getProjectPaths()}`)
+            const config = CodeWhispererSettings.instance.isLocalIndexEnabled() ? 'all' : 'default'
             const r = files.map((f) => f.fileUri.fsPath)
-            const resp = await LspClient.instance.indexFilesV2(r, projRoot)
+            const resp = await LspClient.instance.indexFilesV2(r, projRoot, config)
             if (resp) {
-                getLogger().debug(`LspController: Finish building vector index of project`)
+                getLogger().debug(`LspController: Finish building index of project`)
                 const usage = await LspClient.instance.getLspServerUsage()
                 telemetry.amazonq_indexWorkspace.emit({
                     duration: performance.now() - start,
@@ -340,7 +341,7 @@ export class LspController {
                     credentialStartUrl: AuthUtil.instance.startUrl,
                 })
             } else {
-                getLogger().error(`LspController: Failed to build vector index of project`)
+                getLogger().error(`LspController: Failed to build index of project`)
                 telemetry.amazonq_indexWorkspace.emit({
                     duration: performance.now() - start,
                     result: 'Failed',
@@ -349,7 +350,7 @@ export class LspController {
                 })
             }
         } catch (e) {
-            getLogger().error(`LspController: Failed to build vector index of project ${e}`)
+            getLogger().error(`LspController: Failed to build index of project ${e}`)
             telemetry.amazonq_indexWorkspace.emit({
                 duration: performance.now() - start,
                 result: 'Failed',
@@ -368,12 +369,6 @@ export class LspController {
             return
         }
         setImmediate(async () => {
-            if (!CodeWhispererSettings.instance.isLocalIndexEnabled()) {
-                // only download LSP for users who did not turn on this feature
-                // do not start LSP server
-                await LspController.instance.tryInstallLsp(context)
-                return
-            }
             const ok = await LspController.instance.tryInstallLsp(context)
             if (!ok) {
                 return

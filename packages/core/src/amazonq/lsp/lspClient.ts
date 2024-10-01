@@ -21,6 +21,7 @@ import {
     BuildIndexRequestPayload,
     BuildIndexRequestType,
     GetUsageRequestType,
+    IndexConfig,
     IndexRequestType,
     QueryBM25IndexRequestType,
     QueryCodeMapIndexRequestType,
@@ -91,13 +92,12 @@ export class LspClient {
         }
     }
 
-    // todo: maynot need language? or it should send language[] instead
     // v2
-    async indexFilesV2(paths: string[], rootPath: string) {
+    async indexFilesV2(paths: string[], rootPath: string, config: IndexConfig) {
         const payload: BuildIndexRequestPayload = {
             filePaths: paths,
             projectRoot: rootPath,
-            config: 'all',
+            config: config,
             language: '',
         }
         try {
