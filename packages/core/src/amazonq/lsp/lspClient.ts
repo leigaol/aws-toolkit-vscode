@@ -20,9 +20,11 @@ import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } f
 import {
     BuildIndexRequestPayload,
     BuildIndexRequestType,
+    GetRepomapIndexJSONRequestType,
     GetUsageRequestType,
     IndexConfig,
     QueryInlineProjectContextRequestType,
+    QueryRepomapIndexRequestType,
     QueryVectorIndexRequestType,
     UpdateIndexV2RequestPayload,
     UpdateIndexV2RequestType,
@@ -136,6 +138,32 @@ export class LspClient {
         } catch (e) {
             getLogger().error(`LspClient: updateIndex error: ${e}`)
             return undefined
+        }
+    }
+    async queryRepomapIndex(filePaths: string[]) {
+        try {
+            const request = JSON.stringify({
+                filePath: filePaths,
+            })
+            const resp: any = await this.client?.sendRequest(QueryRepomapIndexRequestType, await this.encrypt(request))
+            return resp
+        } catch (e) {
+            getLogger().error(`LspClient: QueryRepomapIndex error: ${e}`)
+            throw e
+        }
+    }
+
+    async getRepoMapJSON() {
+        try {
+            const request = JSON.stringify({})
+            const resp: any = await this.client?.sendRequest(
+                GetRepomapIndexJSONRequestType,
+                await this.encrypt(request)
+            )
+            return resp
+        } catch (e) {
+            getLogger().error(`LspClient: queryInlineProjectContext error: ${e}`)
+            throw e
         }
     }
 }
