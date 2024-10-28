@@ -11,6 +11,8 @@ import { isCloud9 } from '../../shared/extensionUtilities'
 import { RecommendationHandler } from '../service/recommendationHandler'
 import { session } from '../util/codeWhispererSession'
 import { RecommendationService } from '../service/recommendationService'
+import { LspClient } from '../../amazonq'
+import { getLogger } from '../../shared'
 
 /**
  * This function is for manual trigger CodeWhisperer
@@ -24,6 +26,15 @@ export async function invokeRecommendation(
     if (!config.isManualTriggerEnabled) {
         return
     }
+    const start = performance.now()
+    const repomapFile = await LspClient.instance.getRepoMapJSON()
+    console.log(repomapFile, `lat ${performance.now() - start}`)
+    getLogger().info(`File path ${repomapFile} lat ${performance.now() - start}`)
+
+    const c = await LspClient.instance.queryRepomapIndex([editor.document.uri.fsPath])
+    getLogger().info(`File path ${editor.document.uri.fsPath} lat ${c}`)
+    console.log(c)
+    return
     /**
      * IntelliSense in Cloud9 needs editor.suggest.showMethods
      */

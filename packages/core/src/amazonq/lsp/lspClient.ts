@@ -143,7 +143,7 @@ export class LspClient {
     async queryRepomapIndex(filePaths: string[]) {
         try {
             const request = JSON.stringify({
-                filePath: filePaths,
+                filePaths: filePaths,
             })
             const resp: any = await this.client?.sendRequest(QueryRepomapIndexRequestType, await this.encrypt(request))
             return resp
