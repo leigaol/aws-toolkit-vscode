@@ -353,6 +353,12 @@ export class LspController {
                     amazonqIndexFileSizeInMB: totalSizeBytes / (1024 * 1024),
                     credentialStartUrl: buildIndexConfig.startUrl,
                 })
+                const fn = fs.getUserHomeDir()
+                for (const fp of r) {
+                    const inlineProjectContext: { content: string; score: number; filePath: string }[] =
+                        await this.queryInlineProjectContext('xx', fp)
+                    await fs.appendFile(`${fn}/repomap.jsonl`, JSON.stringify(inlineProjectContext) + '\n')
+                }
             } else {
                 getLogger().error(`LspController: Failed to build index of project`)
                 telemetry.amazonq_indexWorkspace.emit({

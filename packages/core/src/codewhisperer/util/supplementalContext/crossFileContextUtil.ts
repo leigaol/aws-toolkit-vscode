@@ -204,7 +204,7 @@ function getSupplementalContextConfig(languageId: vscode.TextDocument['languageI
     if (FeatureConfigProvider.instance.isNewProjectContextGroup()) {
         return 'v2'
     }
-    return 'v1'
+    return 'v2'
 }
 
 /**
