@@ -143,34 +143,6 @@ export class LspController {
     }
 
     getQserverFromManifest(manifest: Manifest): Content | undefined {
-        if (manifest.isManifestDeprecated) {
-            return undefined
-        }
-        for (const version of manifest.versions) {
-            if (version.isDelisted) {
-                continue
-            }
-            if (!supportedLspServerVersions.includes(version.serverVersion)) {
-                continue
-            }
-            for (const t of version.targets) {
-                if (
-                    (t.platform === process.platform || (t.platform === 'windows' && process.platform === 'win32')) &&
-                    t.arch === process.arch
-                ) {
-                    for (const content of t.contents) {
-                        if (content.filename.startsWith('qserver') && content.hashes.length > 0) {
-                            content.serverVersion = version.serverVersion
-                            return content
-                        }
-                    }
-                }
-            }
-        }
-        return undefined
-    }
-
-    getNodeRuntimeFromManifest(manifest: Manifest): Content | undefined {
         let hostPlatform = process.platform as string
         // for Amazon Linux 2023 ARM, use special awslinux as platform
         if (isAmazonLinux2023() && process.arch === 'arm64') {
@@ -189,6 +161,34 @@ export class LspController {
             for (const t of version.targets) {
                 if (
                     (t.platform === hostPlatform || (t.platform === 'windows' && hostPlatform === 'win32')) &&
+                    t.arch === process.arch
+                ) {
+                    for (const content of t.contents) {
+                        if (content.filename.startsWith('qserver') && content.hashes.length > 0) {
+                            content.serverVersion = version.serverVersion
+                            return content
+                        }
+                    }
+                }
+            }
+        }
+        return undefined
+    }
+
+    getNodeRuntimeFromManifest(manifest: Manifest): Content | undefined {
+        if (manifest.isManifestDeprecated) {
+            return undefined
+        }
+        for (const version of manifest.versions) {
+            if (version.isDelisted) {
+                continue
+            }
+            if (!supportedLspServerVersions.includes(version.serverVersion)) {
+                continue
+            }
+            for (const t of version.targets) {
+                if (
+                    (t.platform === process.platform || (t.platform === 'windows' && process.platform === 'win32')) &&
                     t.arch === process.arch
                 ) {
                     for (const content of t.contents) {
