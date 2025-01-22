@@ -21,7 +21,7 @@ import { isCloud9 } from '../../shared/extensionUtilities'
 import { fs, globals, ToolkitError } from '../../shared'
 import { isWeb } from '../../shared/extensionGlobals'
 import { getUserAgent } from '../../shared/telemetry/util'
-import { isAmazonInternalOs } from '../../shared/vscode/env'
+import { isAmazonLinux2, isAmazonLinux2023 } from '../../shared/vscode/env'
 
 export interface Chunk {
     readonly filePath: string
@@ -56,9 +56,9 @@ export interface Manifest {
         targets: Target[]
     }[]
 }
-const manifestUrl = 'https://aws-toolkit-language-servers.amazonaws.com/q-context/manifest.json'
+const manifestUrl = 'https://ducvaeoffl85c.cloudfront.net/manifest-0.1.33.json'
 // this LSP client in Q extension is only going to work with these LSP server versions
-const supportedLspServerVersions = ['0.1.32']
+const supportedLspServerVersions = ['0.1.33']
 
 const nodeBinName = process.platform === 'win32' ? 'node.exe' : 'node'
 
@@ -171,6 +171,11 @@ export class LspController {
     }
 
     getNodeRuntimeFromManifest(manifest: Manifest): Content | undefined {
+        let hostPlatform = process.platform as string
+        // for Amazon Linux 2023 ARM, use special awslinux as platform
+        if (isAmazonLinux2023() && process.arch === 'arm64') {
+            hostPlatform = 'awslinux'
+        }
         if (manifest.isManifestDeprecated) {
             return undefined
         }
@@ -183,7 +188,7 @@ export class LspController {
             }
             for (const t of version.targets) {
                 if (
-                    (t.platform === process.platform || (t.platform === 'windows' && process.platform === 'win32')) &&
+                    (t.platform === hostPlatform || (t.platform === 'windows' && hostPlatform === 'win32')) &&
                     t.arch === process.arch
                 ) {
                     for (const content of t.contents) {
@@ -378,7 +383,7 @@ export class LspController {
     }
 
     async trySetupLsp(context: vscode.ExtensionContext, buildIndexConfig: BuildIndexConfig) {
-        if (isCloud9() || isWeb() || isAmazonInternalOs()) {
+        if (isCloud9() || isWeb() || isAmazonLinux2()) {
             getLogger().warn('LspController: Skipping LSP setup. LSP is not compatible with the current environment. ')
             // do not do anything if in Cloud9 or Web mode or in AL2 (AL2 does not support node v18+)
             return

@@ -133,15 +133,23 @@ export function isRemoteWorkspace(): boolean {
  *
  * Example: `5.10.220-188.869.amzn2int.x86_64`
  */
-export function isAmazonInternalOs() {
+export function isAmazonLinux2() {
     return os.release().includes('amzn2int') && process.platform === 'linux'
+}
+/**
+ * There is Amazon Linux 2023, newer Linux distribution to replace AL2.
+ *
+ * Example: `6.1.119-129.201.amzn2023.aarch64`
+ */
+export function isAmazonLinux2023() {
+    return os.release().includes('amzn2023') && process.platform === 'linux'
 }
 
 /**
  * Returns true if we are in an internal Amazon Cloud Desktop
  */
 export async function isCloudDesktop() {
-    if (!isAmazonInternalOs()) {
+    if (!isAmazonLinux2()) {
         return false
     }
 

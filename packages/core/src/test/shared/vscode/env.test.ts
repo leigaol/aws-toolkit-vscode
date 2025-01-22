@@ -9,7 +9,7 @@ import {
     isCloudDesktop,
     getEnvVars,
     getServiceEnvVarConfig,
-    isAmazonInternalOs as isAmazonInternalOS,
+    isAmazonLinux2 as isAmazonInternalOS,
     isBeta,
 } from '../../../shared/vscode/env'
 import { ChildProcess } from '../../../shared/utilities/processUtils'
