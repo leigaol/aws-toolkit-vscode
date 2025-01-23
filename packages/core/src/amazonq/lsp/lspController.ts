@@ -56,9 +56,9 @@ export interface Manifest {
         targets: Target[]
     }[]
 }
-const manifestUrl = 'https://ducvaeoffl85c.cloudfront.net/manifest-0.1.33.json'
+const manifestUrl = 'https://ducvaeoffl85c.cloudfront.net/manifest-0.1.34.json'
 // this LSP client in Q extension is only going to work with these LSP server versions
-const supportedLspServerVersions = ['0.1.33']
+const supportedLspServerVersions = ['0.1.34']
 
 const nodeBinName = process.platform === 'win32' ? 'node.exe' : 'node'
 
@@ -204,10 +204,11 @@ export class LspController {
     }
 
     private async hashMatch(filePath: string, content: Content) {
+        getLogger().info(JSON.stringify(content))
         const sha384 = await this.getFileSha384(filePath)
         if ('sha384:' + sha384 !== content.hashes[0]) {
             getLogger().error(
-                `LspController: Downloaded file sha ${sha384} does not match manifest ${content.hashes[0]}.`
+                `LspController: Downloaded file at ${filePath} has sha ${sha384}, which does not match manifest ${content.hashes[0]}.`
             )
             await fs.delete(filePath)
             return false
