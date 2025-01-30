@@ -20,6 +20,16 @@ const workspaceCommand: QuickActionCommandGroup = {
             command: '@workspace',
             description: 'Reference all code in workspace.',
         },
+
+        {
+            command: '@file',
+            description: '',
+        },
+
+        {
+            command: '@folder',
+            description: '',
+        },
     ],
 }
 

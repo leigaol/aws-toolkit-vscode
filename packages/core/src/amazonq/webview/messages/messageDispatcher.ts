@@ -2,7 +2,7 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import * as vscode from 'vscode'
 import { Webview, Uri } from 'vscode'
 import { MessagePublisher } from '../../messages/messagePublisher'
 import { MessageListener } from '../../messages/messageListener'
@@ -18,7 +18,7 @@ export function dispatchWebViewMessagesToApps(
     webview: Webview,
     webViewToAppsMessagePublishers: Map<TabType, MessagePublisher<any>>
 ) {
-    webview.onDidReceiveMessage((msg) => {
+    webview.onDidReceiveMessage(async (msg) => {
         switch (msg.command) {
             case 'ui-is-ready': {
                 /**
@@ -77,6 +77,14 @@ export function dispatchWebViewMessagesToApps(
             case 'update-welcome-count': {
                 const currentLoadCount = globals.globalState.tryGet('aws.amazonq.welcomeChatShowCount', Number, 0)
                 void globals.globalState.tryUpdate('aws.amazonq.welcomeChatShowCount', currentLoadCount + 1)
+                return
+            }
+            case 'context-command-selected': {
+                const folderUri = await vscode.window.showOpenDialog({
+                    canSelectFiles: false,
+                    canSelectFolders: true,
+                    canSelectMany: false,
+                })
                 return
             }
         }

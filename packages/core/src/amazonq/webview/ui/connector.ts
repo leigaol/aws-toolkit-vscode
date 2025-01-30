@@ -131,6 +131,15 @@ export class Connector {
         }
     }
 
+    onContextItemClicked(item: string) {
+        this.sendMessageToExtension({
+            command: 'context-command-selected',
+            tabID: '',
+            messageId: '',
+            item: item,
+        })
+    }
+
     onResponseBodyLinkClick = (tabID: string, messageId: string, link: string): void => {
         switch (this.tabsStorage.getTab(tabID)?.type) {
             case 'cwc':

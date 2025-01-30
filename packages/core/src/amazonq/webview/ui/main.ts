@@ -32,7 +32,7 @@ import { welcomeScreenTabData } from './walkthrough/welcome'
 import { agentWalkthroughDataModel } from './walkthrough/agent'
 import { createClickTelemetry, createOpenAgentTelemetry } from './telemetry/actions'
 import { disclaimerAcknowledgeButtonId, disclaimerCard } from './texts/disclaimer'
-
+//import * as vscode from "vscode"
 /**
  * The number of welcome chat tabs that can be opened before the NEXT one will become
  * a regular chat tab.
@@ -173,6 +173,7 @@ export const createMynahUI = (
          * Proxy for allowing underlying common connectors to call quick action handlers
          */
         handleCommand: (chatPrompt: ChatPrompt, tabId: string) => {
+            console.log(`handleCommand ${JSON.stringify(chatPrompt)}`)
             quickActionHandler.handle(chatPrompt, tabId)
         },
         onUpdateAuthentication: (isAmazonQEnabled: boolean, authenticatingTabIDs: string[]): void => {
@@ -235,6 +236,7 @@ export const createMynahUI = (
         },
         onFileActionClick: (tabID: string, messageId: string, filePath: string, actionName: string): void => {},
         onQuickHandlerCommand: (tabID: string, command?: string, eventId?: string) => {
+            console.log(`onQuickHandlerCommand ${JSON.stringify(command)}`)
             tabsStorage.updateTabLastCommand(tabID, command)
             if (command === 'aws.awsq.transform') {
                 quickActionHandler.handle({ command: '/transform' }, tabID, eventId)
@@ -600,10 +602,10 @@ export const createMynahUI = (
             connector.onStopChatResponse(tabID)
         },
         onChatPrompt: (tabID: string, prompt: ChatPrompt, eventId: string | undefined) => {
+            console.log(`OnChatPrompt ${JSON.stringify(prompt)}`)
             if ((prompt.prompt ?? '') === '' && (prompt.command ?? '') === '') {
                 return
             }
-
             const tabType = tabsStorage.getTab(tabID)?.type
             if (tabType === 'featuredev') {
                 mynahUI.addChatItem(tabID, {
@@ -652,7 +654,13 @@ export const createMynahUI = (
             textMessageHandler.handle(prompt, tabID, eventId as string)
         },
         onVote: connector.onChatItemVoted,
-        onInBodyButtonClicked: (tabId, messageId, action, eventId) => {
+        onInBodyButtonClicked: async (tabId, messageId, action, eventId) => {
+            console.log(`onInBodyButtonClicked ${JSON.stringify(action)}`)
+            if (action.text === '@workspace' || action.text === '@file' || action.text === '@folder') {
+                connector.onContextItemClicked(action.text)
+
+                return
+            }
             switch (action.id) {
                 case disclaimerAcknowledgeButtonId: {
                     disclaimerCardActive = false
