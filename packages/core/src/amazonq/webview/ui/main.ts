@@ -557,6 +557,11 @@ export const createMynahUI = (
                 mynahUI.addChatItem(tabID, message)
             }
         },
+        onContextCommandData(tabID: string, data: MynahUIDataModel) {
+            mynahUI.updateStore(tabID, {
+                contextCommands: data.contextCommands,
+            })
+        },
     })
 
     mynahUI = new MynahUI({

@@ -12,6 +12,7 @@ import {
     ProgressField,
     ReferenceTrackerInformation,
     ChatPrompt,
+    MynahUIDataModel,
 } from '@aws/mynah-ui'
 import { Connector as CWChatConnector } from './apps/cwChatConnector'
 import { Connector as FeatureDevChatConnector } from './apps/featureDevChatConnector'
@@ -87,6 +88,7 @@ export interface ConnectorProps {
     onFileActionClick: (tabID: string, messageId: string, filePath: string, actionName: string) => void
     handleCommand: (chatPrompt: ChatPrompt, tabId: string) => void
     sendStaticMessages: (tabID: string, messages: ChatItem[]) => void
+    onContextCommandData: (tabID: string, message: MynahUIDataModel) => void
     tabsStorage: TabsStorage
 }
 

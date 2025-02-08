@@ -13,8 +13,7 @@ export type TabTypeData = {
     contextCommands?: QuickActionCommandGroup[]
 }
 
-const workspaceCommand: QuickActionCommandGroup = {
-    groupName: 'Mention code',
+export const workspaceCommand: QuickActionCommandGroup = {
     commands: [
         {
             command: '@workspace',
@@ -23,7 +22,7 @@ const workspaceCommand: QuickActionCommandGroup = {
     ],
 }
 
-const commonTabData: TabTypeData = {
+export const commonTabData: TabTypeData = {
     title: 'Chat',
     placeholder: 'Ask a question or enter "/" for quick actions',
     welcome: `Hi, I'm Amazon Q. I can answer your software development questions.

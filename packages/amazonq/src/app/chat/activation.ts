@@ -6,8 +6,8 @@
 import * as vscode from 'vscode'
 import { ExtensionContext, window } from 'vscode'
 import { telemetry } from 'aws-core-vscode/telemetry'
-import { AuthUtil, CodeWhispererSettings } from 'aws-core-vscode/codewhisperer'
-import { Commands, placeholder, funcUtil } from 'aws-core-vscode/shared'
+import { AuthUtil, CodeWhispererSettings, listFilesWithGitignore } from 'aws-core-vscode/codewhisperer'
+import { Commands, placeholder, funcUtil, sleep } from 'aws-core-vscode/shared'
 import * as amazonq from 'aws-core-vscode/amazonq'
 import { scanChatAppInit } from '../amazonqScan'
 import { init as inlineChatInit } from '../../inlineChat/app'
@@ -63,6 +63,61 @@ export async function activate(context: ExtensionContext) {
 
     void setupLsp()
     void setupAuthNotification()
+    await initFiles()
+
+    sleep(15000).then(void provider.refresh())
+}
+
+async function initFiles() {
+    const workspaceFolders = vscode.workspace.workspaceFolders || []
+    const folderCmd = {
+        command: 'folder',
+        children: [
+            {
+                groupName: 'Folders',
+                commands: [
+                    {
+                        command: 'src',
+                        description: './src/',
+                    },
+                ],
+            },
+        ],
+        description: 'All files within a specific folder',
+    }
+    const filesCmd = {
+        command: 'file',
+        children: [
+            {
+                groupName: 'Files',
+                commands: [
+                    {
+                        command: 'src',
+                        description: './src/',
+                    },
+                ],
+            },
+        ],
+        description: 'File',
+    }
+    for (const folder of workspaceFolders) {
+        const fileFolders = await listFilesWithGitignore(folder.uri.fsPath)
+        for (const f of fileFolders) {
+            if (f.isFolder) {
+                folderCmd.children[0].commands.push({
+                    command: f.filename,
+                    description: f.filepath,
+                })
+            } else {
+                filesCmd.children[0].commands.push({
+                    command: f.filename,
+                    description: f.filepath,
+                })
+            }
+        }
+    }
+    amazonq.workspaceCommand.commands.push(filesCmd)
+    amazonq.workspaceCommand.commands.push(folderCmd)
 }
 
 function registerApps(appInitContext: amazonq.AmazonQAppInitContext, context: ExtensionContext) {
