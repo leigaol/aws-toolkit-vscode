@@ -10,7 +10,7 @@ import { BaseConnector, BaseConnectorProps } from './baseConnector'
 
 export interface ConnectorProps extends BaseConnectorProps {
     onCWCContextCommandMessage: (message: CWCChatItem, command?: string) => string | undefined
-    onContextCommandData: (tabID: string, data: MynahUIDataModel) => undefined
+    onContextCommandData: (tabID: string, data: MynahUIDataModel) => void
 }
 
 export class Connector extends BaseConnector {
