@@ -88,7 +88,7 @@ export interface ConnectorProps {
     onFileActionClick: (tabID: string, messageId: string, filePath: string, actionName: string) => void
     handleCommand: (chatPrompt: ChatPrompt, tabId: string) => void
     sendStaticMessages: (tabID: string, messages: ChatItem[]) => void
-    onContextCommandData: (tabID: string, message: MynahUIDataModel) => void
+    onContextCommandDataFetch: (tabID: string, message: MynahUIDataModel['contextCommands']) => void
     tabsStorage: TabsStorage
 }
 

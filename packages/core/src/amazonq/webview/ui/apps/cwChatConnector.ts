@@ -10,12 +10,12 @@ import { BaseConnector, BaseConnectorProps } from './baseConnector'
 
 export interface ConnectorProps extends BaseConnectorProps {
     onCWCContextCommandMessage: (message: CWCChatItem, command?: string) => string | undefined
-    onContextCommandData: (tabID: string, data: MynahUIDataModel) => void
+    onContextCommandDataFetch: (tabID: string, data: MynahUIDataModel['contextCommands']) => void
 }
 
 export class Connector extends BaseConnector {
     private readonly onCWCContextCommandMessage
-    private readonly onContextCommandData
+    private readonly onContextCommandDataFetch
 
     override getTabType(): TabType {
         return 'cwc'
@@ -24,7 +24,7 @@ export class Connector extends BaseConnector {
     constructor(props: ConnectorProps) {
         super(props)
         this.onCWCContextCommandMessage = props.onCWCContextCommandMessage
-        this.onContextCommandData = props.onContextCommandData
+        this.onContextCommandDataFetch = props.onContextCommandDataFetch
     }
 
     onSourceLinkClick = (tabID: string, messageId: string, link: string): void => {
@@ -134,9 +134,9 @@ export class Connector extends BaseConnector {
         }
     }
 
-    processContextCommandData(messageData: any) {
+    processContextCommandDataFetch(messageData: any) {
         if (messageData.data && messageData.tabID) {
-            this.onContextCommandData(messageData.tabID, messageData.data)
+            this.onContextCommandDataFetch(messageData.tabID, messageData.data)
         }
     }
 
@@ -150,8 +150,8 @@ export class Connector extends BaseConnector {
             await this.processEditorContextCommandMessage(messageData)
             return
         }
-        if (messageData.type === 'contextCommandData') {
-            await this.processContextCommandData(messageData)
+        if (messageData.type === 'contextCommandDataFetch') {
+            await this.processContextCommandDataFetch(messageData)
             return
         }
         // For other message types, call the base class handleMessageReceive
