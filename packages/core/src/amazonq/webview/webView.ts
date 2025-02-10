@@ -77,7 +77,7 @@ export class AmazonQChatViewProvider implements WebviewViewProvider {
                 tabID: 'tab-1',
                 sender: 'CWChat',
                 type: 'contextCommandDataFetch',
-                data: cxtCmd,
+                data: cxtCmd.contextCommands,
             }
             this.webView.postMessage(JSON.stringify(a)).then(undefined, (e) => {
                 console.log(e)

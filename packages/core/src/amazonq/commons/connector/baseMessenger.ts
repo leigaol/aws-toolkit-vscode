@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ChatItemAction, ProgressField } from '@aws/mynah-ui'
+import { ChatItemAction, MynahUIDataModel, ProgressField } from '@aws/mynah-ui'
 import { AuthFollowUpType, AuthMessageDataMap } from '../../../amazonq/auth/model'
 import { i18n } from '../../../shared/i18n-helper'
 import { CodeReference } from '../../../amazonq/webview/ui/connector'
@@ -17,6 +17,7 @@ import {
     ChatInputEnabledMessage,
     ChatMessage,
     CodeResultMessage,
+    ContextCommandData,
     FileComponent,
     FolderConfirmationMessage,
     OpenNewTabMessage,
@@ -216,5 +217,9 @@ export class Messenger {
 
     public openNewTask() {
         this.dispatcher.sendOpenNewTask(new OpenNewTabMessage(this.sender))
+    }
+
+    public sendContextCommandData(contextCommands: MynahUIDataModel['contextCommands'], tabID: string) {
+        this.dispatcher.sendContextCommandData(new ContextCommandData(contextCommands, tabID, this.sender))
     }
 }

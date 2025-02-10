@@ -6,7 +6,7 @@
 import { AuthFollowUpType } from '../../auth/model'
 import { MessagePublisher } from '../../messages/messagePublisher'
 import { CodeReference } from '../../webview/ui/connector'
-import { ChatItemAction, ProgressField, SourceLink } from '@aws/mynah-ui'
+import { ChatItemAction, MynahUIDataModel, ProgressField, SourceLink } from '@aws/mynah-ui'
 import { ChatItemType } from '../model'
 import { DeletedFileInfo, NewFileInfo } from '../../../amazonqFeatureDev/types'
 import { licenseText } from '../../../amazonqFeatureDev/constants'
@@ -234,6 +234,16 @@ export class UpdateAnswerMessage extends UiMessage {
     }
 }
 
+export class ContextCommandData extends UiMessage {
+    readonly contextCommands: MynahUIDataModel['contextCommands']
+    override type = 'authNeededException'
+
+    constructor(contextCommands: MynahUIDataModel['contextCommands'], tabID: string, sender: string) {
+        super(tabID, sender)
+        this.contextCommands = contextCommands
+    }
+}
+
 export class AppToWebViewMessageDispatcher {
     constructor(private readonly appsToWebViewMessagePublisher: MessagePublisher<any>) {}
 
@@ -286,6 +296,10 @@ export class AppToWebViewMessageDispatcher {
     }
 
     public updateChatAnswer(message: UpdateAnswerMessage) {
+        this.appsToWebViewMessagePublisher.publish(message)
+    }
+
+    public sendContextCommandData(message: ContextCommandData) {
         this.appsToWebViewMessagePublisher.publish(message)
     }
 }
