@@ -45,6 +45,7 @@ export { extractAuthFollowUp } from './util/authUtils'
 export { Messenger } from './commons/connector/baseMessenger'
 export { workspaceCommand, commonTabData } from './webview/ui/tabs/constants'
 import { FeatureContext } from '../shared'
+import { FeatureContext } from '../shared/featureConfig'
 
 /**
  * main from createMynahUI is a purely browser dependency. Due to this
