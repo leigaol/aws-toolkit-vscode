@@ -77,7 +77,7 @@ export interface ChatControllerMessagePublishers {
     readonly processSourceLinkClick: MessagePublisher<SourceLinkClickMessage>
     readonly processResponseBodyLinkClick: MessagePublisher<ResponseBodyLinkClickMessage>
     readonly processFooterInfoLinkClick: MessagePublisher<FooterInfoLinkClick>
-    readonly processUIReadyMessage: MessagePublisher<void>
+    readonly processContextCommandUpdateMessage: MessagePublisher<void>
 }
 
 export interface ChatControllerMessageListeners {
@@ -98,7 +98,7 @@ export interface ChatControllerMessageListeners {
     readonly processSourceLinkClick: MessageListener<SourceLinkClickMessage>
     readonly processResponseBodyLinkClick: MessageListener<ResponseBodyLinkClickMessage>
     readonly processFooterInfoLinkClick: MessageListener<FooterInfoLinkClick>
-    readonly processUIReadyMessage: MessageListener<void>
+    readonly processContextCommandUpdateMessage: MessageListener<void>
 }
 
 export class ChatController {
@@ -216,8 +216,8 @@ export class ChatController {
         this.chatControllerMessageListeners.processFooterInfoLinkClick.onMessage((data) => {
             return this.processFooterInfoLinkClick(data)
         })
-        this.chatControllerMessageListeners.processUIReadyMessage.onMessage(() => {
-            return this.processUIReadyMessage()
+        this.chatControllerMessageListeners.processContextCommandUpdateMessage.onMessage(() => {
+            return this.processContextCommandUpdateMessage()
         })
     }
 
@@ -359,9 +359,9 @@ export class ChatController {
         }
     }
 
-    private async processUIReadyMessage() {
+    private async processContextCommandUpdateMessage() {
         // when UI is ready, refresh the context commands
-        const workspaceCommand: MynahUIDataModel['contextCommands'] = [
+        const contextCommand: MynahUIDataModel['contextCommands'] = [
             {
                 commands: [
                     {
@@ -395,8 +395,8 @@ export class ChatController {
         ]
         await LspClient.instance.waitUtilReady()
         const contextCommandItems = await LspClient.instance.getContextCommandItems()
-        const folderCmd: QuickActionCommand = workspaceCommand[0].commands?.[1]
-        const filesCmd: QuickActionCommand = workspaceCommand[0].commands?.[2]
+        const folderCmd: QuickActionCommand = contextCommand[0].commands?.[1]
+        const filesCmd: QuickActionCommand = contextCommand[0].commands?.[2]
 
         for (const contextCommandItem of contextCommandItems) {
             const wsFolderName = path.basename(contextCommandItem.workspaceFolder)
@@ -414,7 +414,7 @@ export class ChatController {
                 })
             }
         }
-        this.messenger.sendContextCommandData(workspaceCommand)
+        this.messenger.sendContextCommandData(contextCommand)
     }
 
     private processException(e: any, tabID: string) {

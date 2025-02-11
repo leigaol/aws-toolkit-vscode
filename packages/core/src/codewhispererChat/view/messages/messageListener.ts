@@ -111,7 +111,7 @@ export class UIMessageListener {
     }
 
     private processUIIsReady() {
-        this.chatControllerMessagePublishers.processUIReadyMessage.publish()
+        this.chatControllerMessagePublishers.processContextCommandUpdateMessage.publish()
     }
 
     private processOpenSettings(msg: any) {

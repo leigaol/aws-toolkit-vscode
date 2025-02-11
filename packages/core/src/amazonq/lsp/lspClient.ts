@@ -296,16 +296,20 @@ export async function activate(extensionContext: ExtensionContext) {
             }
         }),
         vscode.workspace.onDidCreateFiles((e) => {
-            void LspClient.instance.updateIndex(
-                e.files.map((f) => f.fsPath),
-                'add'
-            )
+            void LspClient.instance
+                .updateIndex(
+                    e.files.map((f) => f.fsPath),
+                    'add'
+                )
+                .then(void vscode.commands.executeCommand(`aws.amazonq.updateContextCommandItems`))
         }),
         vscode.workspace.onDidDeleteFiles((e) => {
-            void LspClient.instance.updateIndex(
-                e.files.map((f) => f.fsPath),
-                'remove'
-            )
+            void LspClient.instance
+                .updateIndex(
+                    e.files.map((f) => f.fsPath),
+                    'remove'
+                )
+                .then(void vscode.commands.executeCommand(`aws.amazonq.updateContextCommandItems`))
         })
     )
 
