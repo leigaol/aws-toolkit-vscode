@@ -172,10 +172,10 @@ export interface TriggerPayload {
     readonly codeQuery: CodeQuery | undefined
     readonly userIntent: UserIntent | undefined
     readonly customization: Customization
+    readonly context?: string[] | string[][]
     relevantTextDocuments?: RelevantTextDocument[]
     useRelevantDocuments?: boolean
     traceId?: string
-    readonly context?: string[] | string[][]
 }
 
 export interface InsertedCode {

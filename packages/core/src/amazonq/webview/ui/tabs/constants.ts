@@ -14,6 +14,7 @@ export type TabTypeData = {
 }
 
 const workspaceCommand: QuickActionCommandGroup = {
+    groupName: 'Mention code',
     commands: [
         {
             command: '@workspace',

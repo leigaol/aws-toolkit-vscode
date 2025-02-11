@@ -45,6 +45,7 @@ export class AmazonQChatViewProvider implements WebviewViewProvider {
         webviewView.onDidChangeVisibility(() => {
             this.onDidChangeAmazonQVisibility.fire(webviewView.visible)
         })
+
         const dist = Uri.joinPath(this.extensionContext.extensionUri, 'dist')
         const resources = Uri.joinPath(this.extensionContext.extensionUri, 'resources')
         webviewView.webview.options = {
@@ -61,6 +62,7 @@ export class AmazonQChatViewProvider implements WebviewViewProvider {
             this.extensionContext.extensionUri,
             webviewView.webview
         )
+
         performance.mark(amazonqMark.open)
     }
 }
