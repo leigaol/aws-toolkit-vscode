@@ -57,7 +57,7 @@ import { DefaultAmazonQAppInitContext } from '../../../amazonq/apps/initContext'
 import globals from '../../../shared/extensionGlobals'
 import { waitUntil } from '../../../shared/utilities/timeoutUtils'
 import { listFilesWithGitignore } from '../../../codewhisperer/util/gitUtil'
-import { MynahUIDataModel } from '@aws/mynah-ui'
+import { MynahIconsType, MynahUIDataModel, QuickActionCommand } from '@aws/mynah-ui'
 
 export interface ChatControllerMessagePublishers {
     readonly processPromptChatMessage: MessagePublisher<PromptMessage>
@@ -361,54 +361,6 @@ export class ChatController {
 
     private async processUIReadyMessage() {
         const workspaceFolders = vscode.workspace.workspaceFolders || []
-        const folderCmd = {
-            command: 'folder',
-            children: [
-                {
-                    groupName: 'Folders',
-                    commands: [
-                        {
-                            command: 'src',
-                            description: './src/',
-                        },
-                    ],
-                    icon: 'folder',
-                },
-            ],
-            description: 'All files within a specific folder',
-        }
-        const filesCmd = {
-            command: 'file',
-            children: [
-                {
-                    groupName: 'Files',
-                    commands: [
-                        {
-                            command: 'src',
-                            description: './src/',
-                        },
-                    ],
-                    icon: 'file',
-                },
-            ],
-            description: 'File',
-        }
-        for (const folder of workspaceFolders) {
-            const fileFolders = await listFilesWithGitignore(folder.uri.fsPath)
-            for (const f of fileFolders) {
-                if (f.isFolder) {
-                    folderCmd.children[0].commands.push({
-                        command: f.filename,
-                        description: f.filepath,
-                    })
-                } else {
-                    filesCmd.children[0].commands.push({
-                        command: f.filename,
-                        description: f.filepath,
-                    })
-                }
-            }
-        }
         const workspaceCommand: MynahUIDataModel['contextCommands'] = [
             {
                 commands: [
@@ -416,11 +368,63 @@ export class ChatController {
                         command: '@workspace',
                         description: 'Reference all code in workspace.',
                     },
-                    folderCmd,
-                    filesCmd,
+                    {
+                        command: 'folder',
+                        children: [
+                            {
+                                groupName: 'Folders',
+                                commands: [
+                                    {
+                                        command: 'src',
+                                        description: './src/',
+                                        icon: 'folder' as MynahIconsType,
+                                    },
+                                ],
+                            },
+                        ],
+                        description: 'All files within a specific folder',
+                        icon: 'folder' as MynahIconsType,
+                    },
+                    {
+                        command: 'file',
+                        children: [
+                            {
+                                groupName: 'Files',
+                                commands: [
+                                    {
+                                        command: 'src',
+                                        description: './src/',
+                                        icon: 'file' as MynahIconsType,
+                                    },
+                                ],
+                            },
+                        ],
+                        description: 'File',
+                        icon: 'file' as MynahIconsType,
+                    },
                 ],
             },
         ]
+        for (const folder of workspaceFolders) {
+            const fileFolders = await listFilesWithGitignore(folder.uri.fsPath)
+            for (const f of fileFolders) {
+                if (f.isFolder) {
+                    const folderCmd: QuickActionCommand = workspaceCommand[0].commands?.[1]
+                    folderCmd.children?.[0].commands.push({
+                        command: f.filename,
+                        description: f.filepath,
+                        icon: 'folder' as MynahIconsType,
+                    })
+                } else {
+                    const filesCmd: QuickActionCommand = workspaceCommand[0].commands?.[2]
+                    filesCmd.children?.[0].commands.push({
+                        command: f.filename,
+                        description: f.filepath,
+                        icon: 'file' as MynahIconsType,
+                    })
+                }
+            }
+        }
         this.messenger.sendContextCommandData(workspaceCommand)
     }
 
