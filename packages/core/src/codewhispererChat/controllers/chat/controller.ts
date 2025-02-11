@@ -2,7 +2,7 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as vscode from 'vscode'
+import * as path from 'path'
 import { Event as VSCodeEvent, Uri } from 'vscode'
 import { EditorContextExtractor } from '../../editor/context/extractor'
 import { ChatSessionStorage } from '../../storages/chatSession'
@@ -56,8 +56,8 @@ import { inspect } from '../../../shared/utilities/collectionUtils'
 import { DefaultAmazonQAppInitContext } from '../../../amazonq/apps/initContext'
 import globals from '../../../shared/extensionGlobals'
 import { waitUntil } from '../../../shared/utilities/timeoutUtils'
-import { listFilesWithGitignore } from '../../../codewhisperer/util/gitUtil'
 import { MynahIconsType, MynahUIDataModel, QuickActionCommand } from '@aws/mynah-ui'
+import { LspClient } from '../../../amazonq'
 
 export interface ChatControllerMessagePublishers {
     readonly processPromptChatMessage: MessagePublisher<PromptMessage>
@@ -360,7 +360,7 @@ export class ChatController {
     }
 
     private async processUIReadyMessage() {
-        const workspaceFolders = vscode.workspace.workspaceFolders || []
+        // when UI is ready, refresh the context commands
         const workspaceCommand: MynahUIDataModel['contextCommands'] = [
             {
                 commands: [
@@ -393,24 +393,25 @@ export class ChatController {
                 ],
             },
         ]
-        for (const folder of workspaceFolders) {
-            const fileFolders = await listFilesWithGitignore(folder.uri.fsPath)
-            for (const f of fileFolders) {
-                if (f.isFolder) {
-                    const folderCmd: QuickActionCommand = workspaceCommand[0].commands?.[1]
-                    folderCmd.children?.[0].commands.push({
-                        command: f.filename,
-                        description: f.filepath,
-                        icon: 'folder' as MynahIconsType,
-                    })
-                } else {
-                    const filesCmd: QuickActionCommand = workspaceCommand[0].commands?.[2]
-                    filesCmd.children?.[0].commands.push({
-                        command: f.filename,
-                        description: f.filepath,
-                        icon: 'file' as MynahIconsType,
-                    })
-                }
+        await LspClient.instance.waitUtilReady()
+        const contextCommandItems = await LspClient.instance.getContextCommandItems()
+        const folderCmd: QuickActionCommand = workspaceCommand[0].commands?.[1]
+        const filesCmd: QuickActionCommand = workspaceCommand[0].commands?.[2]
+
+        for (const contextCommandItem of contextCommandItems) {
+            const wsFolderName = path.basename(contextCommandItem.workspaceFolder)
+            if (contextCommandItem.type === 'file') {
+                filesCmd.children?.[0].commands.push({
+                    command: path.basename(contextCommandItem.relativePath),
+                    description: path.join(wsFolderName, contextCommandItem.relativePath),
+                    icon: 'file' as MynahIconsType,
+                })
+            } else {
+                folderCmd.children?.[0].commands.push({
+                    command: path.basename(contextCommandItem.relativePath),
+                    description: path.join(wsFolderName, contextCommandItem.relativePath),
+                    icon: 'folder' as MynahIconsType,
+                })
             }
         }
         this.messenger.sendContextCommandData(workspaceCommand)

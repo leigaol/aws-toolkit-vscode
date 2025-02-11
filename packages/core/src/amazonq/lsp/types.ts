@@ -76,3 +76,17 @@ export type GetRepomapIndexJSONRequest = string
 export const GetRepomapIndexJSONRequestType: RequestType<GetRepomapIndexJSONRequest, any, any> = new RequestType(
     'lsp/getRepomapIndexJSON'
 )
+
+export type GetContextCommandItemsRequestPayload = { workspaceFolders: string[] }
+export type GetContextCommandItemsRequest = string
+export const GetContextCommandItemsRequestType: RequestType<GetContextCommandItemsRequest, any, any> = new RequestType(
+    'lsp/getContextCommandItems'
+)
+
+export type ContextCommandItemType = 'file' | 'folder'
+
+export interface ContextCommandItem {
+    workspaceFolder: string
+    type: ContextCommandItemType
+    relativePath: string
+}

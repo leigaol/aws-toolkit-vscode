@@ -29,12 +29,15 @@ import {
     QueryRepomapIndexRequestType,
     GetRepomapIndexJSONRequestType,
     Usage,
+    GetContextCommandItemsRequestType,
+    ContextCommandItem,
 } from './types'
 import { Writable } from 'stream'
 import { CodeWhispererSettings } from '../../codewhisperer/util/codewhispererSettings'
 import { fs } from '../../shared/fs/fs'
 import { getLogger } from '../../shared/logger/logger'
 import globals from '../../shared/extensionGlobals'
+import { waitUntil } from '../../shared'
 
 const localize = nls.loadMessageBundle()
 
@@ -167,6 +170,37 @@ export class LspClient {
             getLogger().error(`LspClient: queryInlineProjectContext error: ${e}`)
             throw e
         }
+    }
+
+    async getContextCommandItems(): Promise<ContextCommandItem[]> {
+        try {
+            await this.client?.onReady()
+            const workspaceFolders = vscode.workspace.workspaceFolders || []
+            const request = JSON.stringify({
+                workspaceFolders: workspaceFolders.map((it) => it.uri.fsPath),
+            })
+            const resp: any = await this.client?.sendRequest(
+                GetContextCommandItemsRequestType,
+                await this.encrypt(request)
+            )
+            return resp
+        } catch (e) {
+            getLogger().error(`LspClient: getContextCommandItems error: ${e}`)
+            throw e
+        }
+    }
+
+    async waitUtilReady() {
+        return waitUntil(
+            async () => {
+                if (this.client === undefined) {
+                    return false
+                }
+                await this.client.onReady()
+                return true
+            },
+            { interval: 1_000, timeout: 60_000 * 5, truthy: true }
+        )
     }
 }
 /**
