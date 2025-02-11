@@ -51,6 +51,7 @@ export interface UploadHistory {
 export interface ChatPayload {
     chatMessage: string
     chatCommand?: string
+    chatContext?: string[] | string[][]
 }
 
 // Adding userIntent param by extending ChatItem to send userIntent as part of amazonq_interactWithMessage telemetry event

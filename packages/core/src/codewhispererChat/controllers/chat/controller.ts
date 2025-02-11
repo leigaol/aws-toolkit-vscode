@@ -360,7 +360,6 @@ export class ChatController {
     }
 
     private async processUIReadyMessage() {
-        console.log(`processUIReadyMessage`)
         const workspaceFolders = vscode.workspace.workspaceFolders || []
         const folderCmd = {
             command: 'folder',
@@ -628,6 +627,7 @@ export class ChatController {
                         codeQuery: context?.focusAreaContext?.names,
                         userIntent: this.userIntentRecognizer.getFromPromptChatMessage(message),
                         customization: getSelectedCustomization(),
+                        context: message.context,
                     },
                     triggerID
                 )
@@ -701,6 +701,9 @@ export class ChatController {
             await this.messenger.sendAuthNeededExceptionMessage(credentialsState, tabID, triggerID)
             return
         }
+        console.log(`context!`)
+        console.log(triggerPayload.context)
+        // TODO: resolve the context into real context up to 90k
         triggerPayload.useRelevantDocuments = false
         if (triggerPayload.message) {
             triggerPayload.useRelevantDocuments = triggerPayload.message.includes(`@workspace`)

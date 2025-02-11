@@ -13,6 +13,7 @@ import { CWCChatItem } from '../connector'
 interface ChatPayload {
     chatMessage: string
     chatCommand?: string
+    chatContext?: string[] | string[][]
 }
 
 export interface BaseConnectorProps {
@@ -212,6 +213,7 @@ export abstract class BaseConnector {
                 command: 'chat-prompt',
                 chatMessage: payload.chatMessage,
                 chatCommand: payload.chatCommand,
+                chatContext: payload.chatContext,
                 tabType: this.getTabType(),
             })
         })

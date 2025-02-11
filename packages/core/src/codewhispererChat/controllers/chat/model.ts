@@ -102,6 +102,7 @@ export interface PromptMessage {
     command: ChatPromptCommandType | undefined
     userIntent: UserIntent | undefined
     tabID: string
+    context?: string[] | string[][]
 }
 
 export interface PromptAnswer {
@@ -174,6 +175,7 @@ export interface TriggerPayload {
     relevantTextDocuments?: RelevantTextDocument[]
     useRelevantDocuments?: boolean
     traceId?: string
+    readonly context?: string[] | string[][]
 }
 
 export interface InsertedCode {
