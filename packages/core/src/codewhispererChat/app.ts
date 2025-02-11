@@ -48,6 +48,7 @@ export function init(appContext: AmazonQAppInitContext) {
         processSourceLinkClick: new EventEmitter<SourceLinkClickMessage>(),
         processResponseBodyLinkClick: new EventEmitter<ResponseBodyLinkClickMessage>(),
         processFooterInfoLinkClick: new EventEmitter<FooterInfoLinkClick>(),
+        processUIReadyMessage: new EventEmitter<any>(),
     }
 
     const cwChatControllerMessageListeners = {
@@ -96,6 +97,7 @@ export function init(appContext: AmazonQAppInitContext) {
         processFooterInfoLinkClick: new MessageListener<FooterInfoLinkClick>(
             cwChatControllerEventEmitters.processFooterInfoLinkClick
         ),
+        processUIReadyMessage: new MessageListener<void>(cwChatControllerEventEmitters.processUIReadyMessage),
     }
 
     const cwChatControllerMessagePublishers = {
@@ -146,6 +148,7 @@ export function init(appContext: AmazonQAppInitContext) {
         processFooterInfoLinkClick: new MessagePublisher<FooterInfoLinkClick>(
             cwChatControllerEventEmitters.processFooterInfoLinkClick
         ),
+        processUIReadyMessage: new MessagePublisher<void>(cwChatControllerEventEmitters.processUIReadyMessage),
     }
 
     new CwChatController(

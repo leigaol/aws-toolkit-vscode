@@ -558,6 +558,7 @@ export const createMynahUI = (
             }
         },
         onContextCommandDataFetch(tabID: string, data: MynahUIDataModel['contextCommands']) {
+            console.log(`onContextCommandDataFetch`)
             mynahUI.updateStore(tabID, {
                 contextCommands: data,
             })

@@ -2,6 +2,7 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+import * as vscode from 'vscode'
 import { Event as VSCodeEvent, Uri } from 'vscode'
 import { EditorContextExtractor } from '../../editor/context/extractor'
 import { ChatSessionStorage } from '../../storages/chatSession'
@@ -55,6 +56,8 @@ import { inspect } from '../../../shared/utilities/collectionUtils'
 import { DefaultAmazonQAppInitContext } from '../../../amazonq/apps/initContext'
 import globals from '../../../shared/extensionGlobals'
 import { waitUntil } from '../../../shared/utilities/timeoutUtils'
+import { listFilesWithGitignore } from '../../../codewhisperer/util/gitUtil'
+import { MynahUIDataModel } from '@aws/mynah-ui'
 
 export interface ChatControllerMessagePublishers {
     readonly processPromptChatMessage: MessagePublisher<PromptMessage>
@@ -74,6 +77,7 @@ export interface ChatControllerMessagePublishers {
     readonly processSourceLinkClick: MessagePublisher<SourceLinkClickMessage>
     readonly processResponseBodyLinkClick: MessagePublisher<ResponseBodyLinkClickMessage>
     readonly processFooterInfoLinkClick: MessagePublisher<FooterInfoLinkClick>
+    readonly processUIReadyMessage: MessagePublisher<void>
 }
 
 export interface ChatControllerMessageListeners {
@@ -94,6 +98,7 @@ export interface ChatControllerMessageListeners {
     readonly processSourceLinkClick: MessageListener<SourceLinkClickMessage>
     readonly processResponseBodyLinkClick: MessageListener<ResponseBodyLinkClickMessage>
     readonly processFooterInfoLinkClick: MessageListener<FooterInfoLinkClick>
+    readonly processUIReadyMessage: MessageListener<void>
 }
 
 export class ChatController {
@@ -210,6 +215,9 @@ export class ChatController {
         })
         this.chatControllerMessageListeners.processFooterInfoLinkClick.onMessage((data) => {
             return this.processFooterInfoLinkClick(data)
+        })
+        this.chatControllerMessageListeners.processUIReadyMessage.onMessage(() => {
+            return this.processUIReadyMessage()
         })
     }
 
@@ -349,6 +357,72 @@ export class ChatController {
                 this.telemetryHelper.recordExitFocusChat()
                 break
         }
+    }
+
+    private async processUIReadyMessage() {
+        console.log(`processUIReadyMessage`)
+        const workspaceFolders = vscode.workspace.workspaceFolders || []
+        const folderCmd = {
+            command: 'folder',
+            children: [
+                {
+                    groupName: 'Folders',
+                    commands: [
+                        {
+                            command: 'src',
+                            description: './src/',
+                        },
+                    ],
+                    icon: 'folder',
+                },
+            ],
+            description: 'All files within a specific folder',
+        }
+        const filesCmd = {
+            command: 'file',
+            children: [
+                {
+                    groupName: 'Files',
+                    commands: [
+                        {
+                            command: 'src',
+                            description: './src/',
+                        },
+                    ],
+                    icon: 'file',
+                },
+            ],
+            description: 'File',
+        }
+        for (const folder of workspaceFolders) {
+            const fileFolders = await listFilesWithGitignore(folder.uri.fsPath)
+            for (const f of fileFolders) {
+                if (f.isFolder) {
+                    folderCmd.children[0].commands.push({
+                        command: f.filename,
+                        description: f.filepath,
+                    })
+                } else {
+                    filesCmd.children[0].commands.push({
+                        command: f.filename,
+                        description: f.filepath,
+                    })
+                }
+            }
+        }
+        const workspaceCommand: MynahUIDataModel['contextCommands'] = [
+            {
+                commands: [
+                    {
+                        command: '@workspace',
+                        description: 'Reference all code in workspace.',
+                    },
+                    folderCmd,
+                    filesCmd,
+                ],
+            },
+        ]
+        this.messenger.sendContextCommandData(workspaceCommand)
     }
 
     private processException(e: any, tabID: string) {

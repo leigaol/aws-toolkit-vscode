@@ -20,8 +20,6 @@ import { MessageListener } from '../messages/messageListener'
 import { MessagePublisher } from '../messages/messagePublisher'
 import { TabType } from './ui/storages/tabsStorage'
 import { amazonqMark } from '../../shared/performance/marks'
-import { TabTypeDataMap } from './ui/tabs/constants'
-import { MynahUIDataModel } from '@aws/mynah-ui'
 
 export class AmazonQChatViewProvider implements WebviewViewProvider {
     public static readonly viewType = 'aws.AmazonQChatView'
@@ -65,23 +63,5 @@ export class AmazonQChatViewProvider implements WebviewViewProvider {
         )
         this.webView = webviewView.webview
         performance.mark(amazonqMark.open)
-        this.refresh()
-    }
-
-    public async refresh() {
-        if (this.webView) {
-            const cxtCmd: MynahUIDataModel = {
-                contextCommands: TabTypeDataMap['cwc'].contextCommands,
-            }
-            const a = {
-                tabID: 'tab-1',
-                sender: 'CWChat',
-                type: 'contextCommandDataFetch',
-                data: cxtCmd.contextCommands,
-            }
-            this.webView.postMessage(JSON.stringify(a)).then(undefined, (e) => {
-                console.log(e)
-            })
-        }
     }
 }

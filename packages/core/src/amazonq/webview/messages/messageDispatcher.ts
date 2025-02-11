@@ -36,6 +36,8 @@ export function dispatchWebViewMessagesToApps(
                 })
                 performance.clearMarks(amazonqMark.uiReady)
                 performance.clearMarks(amazonqMark.open)
+                // let cwcController know the ui is ready
+                webViewToAppsMessagePublishers.get('cwc')?.publish(msg)
                 return
             }
             case 'start-chat-message-telemetry': {
@@ -103,6 +105,7 @@ export function dispatchWebViewMessagesToApps(
 
 export function dispatchAppsMessagesToWebView(webView: Webview, appsMessageListener: MessageListener<any>) {
     appsMessageListener.onMessage((msg) => {
+        console.log(msg)
         webView.postMessage(JSON.stringify(msg)).then(undefined, (e) => {
             getLogger().error('webView.postMessage failed: %s', (e as Error).message)
         })

@@ -103,7 +103,15 @@ export class UIMessageListener {
                 break
             case 'open-settings':
                 this.processOpenSettings(msg)
+                break
+            case 'ui-is-ready':
+                this.processUIIsReady()
+                break
         }
+    }
+
+    private processUIIsReady() {
+        this.chatControllerMessagePublishers.processUIReadyMessage.publish()
     }
 
     private processOpenSettings(msg: any) {

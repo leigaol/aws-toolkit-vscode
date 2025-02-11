@@ -134,7 +134,8 @@ export class Connector extends BaseConnector {
         }
     }
 
-    processContextCommandDataFetch(messageData: any) {
+    processContextCommandData(messageData: any) {
+        console.log(messageData)
         if (messageData.data && messageData.tabID) {
             this.onContextCommandDataFetch(messageData.tabID, messageData.data)
         }
@@ -150,8 +151,8 @@ export class Connector extends BaseConnector {
             await this.processEditorContextCommandMessage(messageData)
             return
         }
-        if (messageData.type === 'contextCommandDataFetch') {
-            await this.processContextCommandDataFetch(messageData)
+        if (messageData.type === 'contextCommandData') {
+            await this.processContextCommandData(messageData)
             return
         }
         // For other message types, call the base class handleMessageReceive
