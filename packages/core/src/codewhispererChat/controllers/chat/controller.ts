@@ -373,13 +373,7 @@ export class ChatController {
                         children: [
                             {
                                 groupName: 'Folders',
-                                commands: [
-                                    {
-                                        command: 'src',
-                                        description: './src/',
-                                        icon: 'folder' as MynahIconsType,
-                                    },
-                                ],
+                                commands: [],
                             },
                         ],
                         description: 'All files within a specific folder',
@@ -390,13 +384,7 @@ export class ChatController {
                         children: [
                             {
                                 groupName: 'Files',
-                                commands: [
-                                    {
-                                        command: 'src',
-                                        description: './src/',
-                                        icon: 'file' as MynahIconsType,
-                                    },
-                                ],
+                                commands: [],
                             },
                         ],
                         description: 'File',
