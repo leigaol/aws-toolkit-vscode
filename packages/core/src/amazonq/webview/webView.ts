@@ -61,7 +61,6 @@ export class AmazonQChatViewProvider implements WebviewViewProvider {
             this.extensionContext.extensionUri,
             webviewView.webview
         )
-        this.webView = webviewView.webview
         performance.mark(amazonqMark.open)
     }
 }

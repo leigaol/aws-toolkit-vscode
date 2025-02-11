@@ -105,7 +105,6 @@ export function dispatchWebViewMessagesToApps(
 
 export function dispatchAppsMessagesToWebView(webView: Webview, appsMessageListener: MessageListener<any>) {
     appsMessageListener.onMessage((msg) => {
-        console.log(msg)
         webView.postMessage(JSON.stringify(msg)).then(undefined, (e) => {
             getLogger().error('webView.postMessage failed: %s', (e as Error).message)
         })
