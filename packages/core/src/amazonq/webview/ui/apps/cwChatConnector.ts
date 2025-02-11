@@ -10,12 +10,12 @@ import { BaseConnector, BaseConnectorProps } from './baseConnector'
 
 export interface ConnectorProps extends BaseConnectorProps {
     onCWCContextCommandMessage: (message: CWCChatItem, command?: string) => string | undefined
-    onContextCommandDataFetch: (tabID: string, data: MynahUIDataModel['contextCommands']) => void
+    onContextCommandDataReceived: (data: MynahUIDataModel['contextCommands']) => void
 }
 
 export class Connector extends BaseConnector {
     private readonly onCWCContextCommandMessage
-    private readonly onContextCommandDataFetch
+    private readonly onContextCommandDataReceived
 
     override getTabType(): TabType {
         return 'cwc'
@@ -24,7 +24,7 @@ export class Connector extends BaseConnector {
     constructor(props: ConnectorProps) {
         super(props)
         this.onCWCContextCommandMessage = props.onCWCContextCommandMessage
-        this.onContextCommandDataFetch = props.onContextCommandDataFetch
+        this.onContextCommandDataReceived = props.onContextCommandDataReceived
     }
 
     onSourceLinkClick = (tabID: string, messageId: string, link: string): void => {
@@ -135,9 +135,8 @@ export class Connector extends BaseConnector {
     }
 
     processContextCommandData(messageData: any) {
-        console.log(messageData)
-        if (messageData.data && messageData.tabID) {
-            this.onContextCommandDataFetch(messageData.tabID, messageData.data)
+        if (messageData.data) {
+            this.onContextCommandDataReceived(messageData.data)
         }
     }
 
