@@ -43,7 +43,6 @@ export { ExtensionMessage } from '../amazonq/webview/ui/commands'
 export { CodeReference } from '../codewhispererChat/view/connector/connector'
 export { extractAuthFollowUp } from './util/authUtils'
 export { Messenger } from './commons/connector/baseMessenger'
-export { workspaceCommand, commonTabData } from './webview/ui/tabs/constants'
 import { FeatureContext } from '../shared'
 
 /**
