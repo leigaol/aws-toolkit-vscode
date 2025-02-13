@@ -10,6 +10,7 @@ import { Selection } from 'vscode'
 import { TabOpenType } from '../../../amazonq/webview/ui/storages/tabsStorage'
 import { CodeReference } from '../../view/connector/connector'
 import { Customization } from '../../../codewhisperer/client/codewhispereruserclient'
+import { QuickActionCommand } from '@aws/mynah-ui'
 
 export interface TriggerTabIDReceived {
     tabID: string
@@ -102,7 +103,7 @@ export interface PromptMessage {
     command: ChatPromptCommandType | undefined
     userIntent: UserIntent | undefined
     tabID: string
-    context?: string[] | string[][]
+    context?: string[] | QuickActionCommand[]
 }
 
 export interface PromptAnswer {
@@ -172,7 +173,7 @@ export interface TriggerPayload {
     readonly codeQuery: CodeQuery | undefined
     readonly userIntent: UserIntent | undefined
     readonly customization: Customization
-    readonly context?: string[] | string[][]
+    readonly context?: string[] | QuickActionCommand[]
     relevantTextDocuments?: RelevantTextDocument[]
     useRelevantDocuments?: boolean
     traceId?: string

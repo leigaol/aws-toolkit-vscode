@@ -13,6 +13,7 @@ import {
     ReferenceTrackerInformation,
     ChatPrompt,
     MynahUIDataModel,
+    QuickActionCommand,
 } from '@aws/mynah-ui'
 import { Connector as CWChatConnector } from './apps/cwChatConnector'
 import { Connector as FeatureDevChatConnector } from './apps/featureDevChatConnector'
@@ -51,7 +52,7 @@ export interface UploadHistory {
 export interface ChatPayload {
     chatMessage: string
     chatCommand?: string
-    chatContext?: string[] | string[][]
+    chatContext?: string[] | QuickActionCommand[] | undefined
 }
 
 // Adding userIntent param by extending ChatItem to send userIntent as part of amazonq_interactWithMessage telemetry event
