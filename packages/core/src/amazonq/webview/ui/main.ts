@@ -342,6 +342,7 @@ export const createMynahUI = (
             }
         },
         onChatAnswerReceived: (tabID: string, item: CWCChatItem, messageData: any) => {
+            console.log('onChatAnswerReceived')
             if (item.type === ChatItemType.ANSWER_PART || item.type === ChatItemType.CODE_RESULT) {
                 mynahUI.updateLastChatAnswer(tabID, {
                     ...(item.messageId !== undefined ? { messageId: item.messageId } : {}),
@@ -367,6 +368,38 @@ export const createMynahUI = (
                 })
                 return
             }
+
+            if (item.contextList !== undefined && item.contextList.length > 0) {
+                item.contextList.forEach((file) => {
+                    console.log(
+                        `File: ${file.relativeFilePath}, Type: ${typeof file.lineRanges}, IsArray: ${Array.isArray(file.lineRanges)}`
+                    )
+                    console.log('Debugging lineRanges:', JSON.stringify(file.lineRanges, undefined, 2))
+                })
+                item.header = {
+                    fileList: {
+                        fileTreeTitle: '',
+                        filePaths: item.contextList.map((file) => file.relativeFilePath),
+                        rootFolderTitle: 'Context',
+                        collapsedByDefault: true,
+                        hideFileCount: true,
+                        details: Object.fromEntries(
+                            item.contextList.map((file) => [
+                                file.relativeFilePath,
+                                {
+                                    label: file.lineRanges
+                                        .map((range) => `line ${range.first} - ${range.second}`)
+                                        .join(', '), // Default values, adjust as needed
+                                    description: file.relativeFilePath, // Modify dynamically if needed
+                                    clickable: true,
+                                },
+                            ])
+                        ),
+                    },
+                }
+            }
+            console.log('item')
+            console.log(item)
 
             if (
                 item.body !== undefined ||

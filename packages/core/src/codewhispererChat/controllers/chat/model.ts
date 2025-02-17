@@ -36,6 +36,10 @@ export interface UIFocusMessage {
     type: 'focus' | 'blur'
 }
 
+export interface FileClickMessage {
+    tabID: string
+}
+
 export interface InsertCodeAtCursorPosition {
     command: string | undefined
     tabID: string
@@ -147,6 +151,13 @@ export interface QuickCommandGroupActionClick {
     tabID: string
 }
 
+export interface FileClick {
+    command: string
+    tabID: string
+    messageId: string
+    filePath: string
+}
+
 export interface ChatItemVotedMessage {
     tabID: string
     command: string
@@ -182,8 +193,14 @@ export interface TriggerPayload {
     readonly context?: string[] | QuickActionCommand[]
     relevantTextDocuments?: RelevantTextDocument[]
     additionalContents?: AdditionalContentEntry[]
+    mergedRelevantDocuments?: MergedRelevantDocument[]
     useRelevantDocuments?: boolean
     traceId?: string
+}
+
+export interface MergedRelevantDocument {
+    readonly relativeFilePath: string
+    readonly lineRanges: Array<{ first: number; second: number }> // Equivalent to List<Pair<Int, Int>> in Kotlin
 }
 
 export interface InsertedCode {
