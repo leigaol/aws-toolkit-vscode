@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import * as path from 'path'
-import * as vscode from 'vscode'
 import { Event as VSCodeEvent, Uri } from 'vscode'
 import { EditorContextExtractor } from '../../editor/context/extractor'
 import { ChatSessionStorage } from '../../storages/chatSession'
@@ -59,7 +58,7 @@ import globals from '../../../shared/extensionGlobals'
 import { waitUntil } from '../../../shared/utilities/timeoutUtils'
 import { MynahIconsType, MynahUIDataModel, QuickActionCommand } from '@aws/mynah-ui'
 import { LspClient } from '../../../amazonq'
-import { fs } from '../../../shared'
+import { ContextCommandItem } from '../../../amazonq/lsp/types'
 
 export interface ChatControllerMessagePublishers {
     readonly processPromptChatMessage: MessagePublisher<PromptMessage>
@@ -406,14 +405,14 @@ export class ChatController {
                 filesCmd.children?.[0].commands.push({
                     command: path.basename(contextCommandItem.relativePath),
                     description: path.join(wsFolderName, contextCommandItem.relativePath),
-                    route: [wsFolderName, contextCommandItem.relativePath],
+                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
                     icon: 'file' as MynahIconsType,
                 })
             } else {
                 folderCmd.children?.[0].commands.push({
                     command: path.basename(contextCommandItem.relativePath),
                     description: path.join(wsFolderName, contextCommandItem.relativePath),
-                    route: [wsFolderName, contextCommandItem.relativePath],
+                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
                     icon: 'folder' as MynahIconsType,
                 })
             }
@@ -666,52 +665,33 @@ export class ChatController {
         this.messenger.sendStaticTextResponse(responseType, triggerID, tabID)
     }
 
-    // this is just a draft!! TODO: use LSP
-    private async contextResolve(triggerPayload: TriggerPayload) {
-        const ctx = triggerPayload.context
-        if (ctx === undefined) {
+    private async resolveContextCommandPayload(triggerPayload: TriggerPayload) {
+        if (triggerPayload.context === undefined || triggerPayload.context.length === 0) {
             return
         }
-        let wsFolders = vscode.workspace.workspaceFolders || []
-        triggerPayload.relevantTextDocuments = []
-        for (const cmd of ctx) {
-            if (typeof cmd === 'string') {
-            } else {
-                const pathC = cmd.route || []
-                for (const folder of wsFolders) {
-                    if (folder.name === pathC[0]) {
-                        const absFilePath = path.join(folder.uri.fsPath, pathC[1])
-                        if (cmd.icon === 'file') {
-                            const ct = await fs.readFileText(absFilePath)
-                            triggerPayload.useRelevantDocuments = true
-                            if (triggerPayload.relevantTextDocuments.length < 5) {
-                                triggerPayload.relevantTextDocuments?.push({
-                                    relativeFilePath: pathC[1],
-                                    text: ct.slice(0, 10240),
-                                })
-                            }
-                        } else {
-                            // Get all files using workspace.findFiles
-                            const files = await vscode.workspace.findFiles(
-                                new vscode.RelativePattern(absFilePath, '**/*')
-                            )
-
-                            // Convert URIs to paths
-                            const filePaths = files.map((file) => file.fsPath).slice(0, 5)
-                            for (const fp of filePaths) {
-                                const ct = await fs.readFileText(fp)
-                                triggerPayload.useRelevantDocuments = true
-                                if (triggerPayload.relevantTextDocuments.length < 5) {
-                                    triggerPayload.relevantTextDocuments?.push({
-                                        relativeFilePath: pathC[1],
-                                        text: ct.slice(0, 10240),
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
+        const contextCommands: ContextCommandItem[] = []
+        for (const context of triggerPayload.context) {
+            if (typeof context !== 'string' && context.route && context.route.length === 2) {
+                contextCommands.push({
+                    workspaceFolder: context.route?.[0] || '',
+                    type: context.icon === 'folder' ? 'folder' : 'file',
+                    relativePath: context.route?.[1] || '',
+                })
             }
+        }
+        const prompts = await LspClient.instance.getContextCommandPrompt(contextCommands)
+        if (prompts.length > 0) {
+            triggerPayload.additionalContents = []
+            for (const prompt of prompts) {
+                triggerPayload.additionalContents.push({
+                    name: prompt.name,
+                    description: prompt.description,
+                    innerContext: prompt.content,
+                })
+            }
+            getLogger().info(
+                `Retrieved chunks of additional context count: ${triggerPayload.additionalContents.length} `
+            )
         }
     }
 
@@ -747,8 +727,8 @@ export class ChatController {
             await this.messenger.sendAuthNeededExceptionMessage(credentialsState, tabID, triggerID)
             return
         }
-        console.log(`context!`)
-        await this.contextResolve(triggerPayload)
+
+        await this.resolveContextCommandPayload(triggerPayload)
         // TODO: resolve the context into real context up to 90k
         triggerPayload.useRelevantDocuments = false
         if (triggerPayload.message) {

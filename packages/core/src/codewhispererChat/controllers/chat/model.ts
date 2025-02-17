@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode'
-import { RelevantTextDocument, UserIntent } from '@amzn/codewhisperer-streaming'
+import { AdditionalContentEntry, RelevantTextDocument, UserIntent } from '@amzn/codewhisperer-streaming'
 import { MatchPolicy, CodeQuery } from '../../clients/chat/v0/model'
 import { Selection } from 'vscode'
 import { TabOpenType } from '../../../amazonq/webview/ui/storages/tabsStorage'
@@ -175,6 +175,7 @@ export interface TriggerPayload {
     readonly customization: Customization
     readonly context?: string[] | QuickActionCommand[]
     relevantTextDocuments?: RelevantTextDocument[]
+    additionalContents?: AdditionalContentEntry[]
     useRelevantDocuments?: boolean
     traceId?: string
 }

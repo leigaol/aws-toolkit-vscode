@@ -96,3 +96,22 @@ export interface ContextCommandItem {
     type: ContextCommandItemType
     relativePath: string
 }
+
+export type GetContextCommandPromptRequestPayload = {
+    contextCommands: {
+        workspaceFolder: string
+        type: 'file' | 'folder'
+        relativePath: string
+    }[]
+}
+export type GetContextCommandPromptRequest = string
+export const GetContextCommandPromptRequestType: RequestType<GetContextCommandPromptRequest, any, any> =
+    new RequestType('lsp/getContextCommandPrompt')
+
+export interface AdditionalContextPrompt {
+    content: string
+    name: string
+    description: string
+    startLine: number
+    endLine: number
+}

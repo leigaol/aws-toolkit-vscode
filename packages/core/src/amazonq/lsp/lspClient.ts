@@ -32,6 +32,8 @@ import {
     GetContextCommandItemsRequestType,
     ContextCommandItem,
     GetIndexSequenceNumberRequestType,
+    GetContextCommandPromptRequestType,
+    AdditionalContextPrompt,
 } from './types'
 import { Writable } from 'stream'
 import { CodeWhispererSettings } from '../../codewhisperer/util/codewhispererSettings'
@@ -186,6 +188,22 @@ export class LspClient {
             return resp
         } catch (e) {
             getLogger().error(`LspClient: getContextCommandItems error: ${e}`)
+            throw e
+        }
+    }
+
+    async getContextCommandPrompt(contextCommandItems: ContextCommandItem[]): Promise<AdditionalContextPrompt[]> {
+        try {
+            const request = JSON.stringify({
+                contextCommands: contextCommandItems,
+            })
+            const resp: any = await this.client?.sendRequest(
+                GetContextCommandPromptRequestType,
+                await this.encrypt(request)
+            )
+            return resp
+        } catch (e) {
+            getLogger().error(`LspClient: getContextCommandPrompt error: ${e}`)
             throw e
         }
     }
