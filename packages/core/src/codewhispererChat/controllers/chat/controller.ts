@@ -789,14 +789,12 @@ export class ChatController {
         }
         const contextCommands: ContextCommandItem[] = []
         for (const context of triggerPayload.context) {
-            if (typeof context !== 'string') {
-                if (context.route && context.route.length === 2) {
-                    contextCommands.push({
-                        workspaceFolder: context.route?.[0] || '',
-                        type: context.icon === 'folder' ? 'folder' : 'file',
-                        relativePath: context.route?.[1] || '',
-                    })
-                }
+            if (typeof context !== 'string' && context.route && context.route.length === 2) {
+                contextCommands.push({
+                    workspaceFolder: context.route?.[0] || '',
+                    type: context.icon === 'folder' ? 'folder' : 'file',
+                    relativePath: context.route?.[1] || '',
+                })
             }
         }
         const prompts = await LspClient.instance.getContextCommandPrompt(contextCommands)
