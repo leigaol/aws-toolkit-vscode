@@ -311,9 +311,6 @@ export class Connector {
             case 'doc':
                 this.docChatConnector.onTabOpen(tabID)
                 break
-            case 'review':
-                this.scanChatConnector.onTabOpen(tabID)
-                break
         }
     }
 
@@ -605,6 +602,9 @@ export class Connector {
         switch (this.tabsStorage.getTab(tabId)?.type) {
             case 'featuredev':
                 this.featureDevChatConnector.sendFeedback(tabId, feedbackPayload)
+                break
+            case 'testgen':
+                this.testChatConnector.onSendFeedback(tabId, feedbackPayload)
                 break
             case 'cwc':
                 this.cwChatConnector.onSendFeedback(tabId, feedbackPayload)
