@@ -342,7 +342,6 @@ export const createMynahUI = (
             }
         },
         onChatAnswerReceived: (tabID: string, item: CWCChatItem, messageData: any) => {
-            console.log('onChatAnswerReceived')
             if (item.type === ChatItemType.ANSWER_PART || item.type === ChatItemType.CODE_RESULT) {
                 mynahUI.updateLastChatAnswer(tabID, {
                     ...(item.messageId !== undefined ? { messageId: item.messageId } : {}),
@@ -370,12 +369,6 @@ export const createMynahUI = (
             }
 
             if (item.contextList !== undefined && item.contextList.length > 0) {
-                item.contextList.forEach((file) => {
-                    console.log(
-                        `File: ${file.relativeFilePath}, Type: ${typeof file.lineRanges}, IsArray: ${Array.isArray(file.lineRanges)}`
-                    )
-                    console.log('Debugging lineRanges:', JSON.stringify(file.lineRanges, undefined, 2))
-                })
                 item.header = {
                     fileList: {
                         fileTreeTitle: '',
@@ -389,8 +382,8 @@ export const createMynahUI = (
                                 {
                                     label: file.lineRanges
                                         .map((range) => `line ${range.first} - ${range.second}`)
-                                        .join(', '), // Default values, adjust as needed
-                                    description: file.relativeFilePath, // Modify dynamically if needed
+                                        .join(', '),
+                                    description: file.relativeFilePath,
                                     clickable: true,
                                 },
                             ])
@@ -398,8 +391,6 @@ export const createMynahUI = (
                     },
                 }
             }
-            console.log('item')
-            console.log(item)
 
             if (
                 item.body !== undefined ||
