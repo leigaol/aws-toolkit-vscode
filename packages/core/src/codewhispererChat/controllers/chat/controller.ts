@@ -919,7 +919,7 @@ export class ChatController {
                 (context) => typeof context !== 'string' && context.command === '@workspace'
             )
             if (triggerPayload.useRelevantDocuments) {
-                triggerPayload.message = triggerPayload.message.replace(/@workspace/g, '')
+                triggerPayload.message = triggerPayload.message.replace(/workspace/, '')
                 if (CodeWhispererSettings.instance.isLocalIndexEnabled()) {
                     const start = performance.now()
                     triggerPayload.relevantTextDocuments = await LspController.instance.query(triggerPayload.message)
