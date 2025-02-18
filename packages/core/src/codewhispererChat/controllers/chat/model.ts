@@ -36,10 +36,6 @@ export interface UIFocusMessage {
     type: 'focus' | 'blur'
 }
 
-export interface FileClickMessage {
-    tabID: string
-}
-
 export interface InsertCodeAtCursorPosition {
     command: string | undefined
     tabID: string
