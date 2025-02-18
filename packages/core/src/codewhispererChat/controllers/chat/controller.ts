@@ -474,16 +474,16 @@ export class ChatController {
             const systemPromptsDirectory = path.join(fs.getUserHomeDir(), '.aws', 'prompts')
             const directoryExists = await fs.exists(systemPromptsDirectory)
             if (directoryExists) {
-            const systemPromptFiles = await fs.readdir(systemPromptsDirectory)
-            promptsCmd.children?.[0].commands.push(
-                ...systemPromptFiles
-                    .filter(([name]) => name.endsWith('.prompt'))
-                    .map(([name]) => ({
-                        command: name.replace(/\.prompt$/, ''),
-                        icon: 'magic' as MynahIconsType,
-                        route: [systemPromptsDirectory, name],
-                    }))
-            )
+                const systemPromptFiles = await fs.readdir(systemPromptsDirectory)
+                promptsCmd.children?.[0].commands.push(
+                    ...systemPromptFiles
+                        .filter(([name]) => name.endsWith('.prompt'))
+                        .map(([name]) => ({
+                            command: name.replace(/\.prompt$/, ''),
+                            icon: 'magic' as MynahIconsType,
+                            route: [systemPromptsDirectory, name],
+                        }))
+                )
             }
         } catch (e) {
             getLogger().verbose(`Could not read prompts from ~/.aws/prompts: ${e}`)
