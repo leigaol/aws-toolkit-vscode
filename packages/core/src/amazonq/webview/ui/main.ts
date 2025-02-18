@@ -639,7 +639,7 @@ export const createMynahUI = (
                 mynahUI.addChatItem(tabID, {
                     type: ChatItemType.ANSWER_STREAM,
                 })
-            } else if (tabType === 'gumby') {
+            } else if (tabType === 'gumby' || tabType === 'testgen') {
                 connector.requestAnswer(tabID, {
                     chatMessage: prompt.prompt ?? '',
                 })
