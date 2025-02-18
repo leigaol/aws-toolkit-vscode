@@ -961,7 +961,6 @@ export class ChatController {
             const currentContext = session.contexts.get(session.currentContextId)
             if (currentContext) {
                 currentContext.set(doc.relativeFilePath, doc.lineRanges)
-                console.log(doc.relativeFilePath)
             }
         })
 

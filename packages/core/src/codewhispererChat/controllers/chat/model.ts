@@ -200,7 +200,7 @@ export interface TriggerPayload {
 
 export interface MergedRelevantDocument {
     readonly relativeFilePath: string
-    readonly lineRanges: Array<{ first: number; second: number }> // Equivalent to List<Pair<Int, Int>> in Kotlin
+    readonly lineRanges: Array<{ first: number; second: number }>
 }
 
 export interface InsertedCode {
