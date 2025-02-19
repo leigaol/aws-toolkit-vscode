@@ -445,7 +445,10 @@ export class ChatController {
         const commandName = feature?.value.stringValue
         if (commandName) {
             const commandDescription = feature.variation
-            contextCommand[0].commands.splice(1, 0, { command: commandName, description: commandDescription })
+            contextCommand.push({
+                groupName: 'Additional Commands',
+                commands: [{ command: commandName, description: commandDescription }],
+            })
         }
 
         const lspClientReady = await LspClient.instance.waitUntilReady()
