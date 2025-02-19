@@ -884,7 +884,6 @@ export class ChatController {
                     relativePath: context.route?.[1] || '',
                 })
                 relativePaths.push(context.route[1])
-                console.log(context.route[1])
             }
         }
         if (contextCommands.length === 0) {
