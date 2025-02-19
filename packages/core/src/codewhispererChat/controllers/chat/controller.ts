@@ -450,42 +450,19 @@ export class ChatController {
                 commands: [{ command: commandName, description: commandDescription }],
             })
         }
-
-        const lspClientReady = await LspClient.instance.waitUntilReady()
-        if (!lspClientReady) {
-            return
-        }
-        const contextCommandItems = await LspClient.instance.getContextCommandItems()
-        const folderCmd: QuickActionCommand = contextCommand[0].commands?.[1]
-        const filesCmd: QuickActionCommand = contextCommand[0].commands?.[2]
         const promptsCmd: QuickActionCommand = contextCommand[0].commands?.[3]
 
-        for (const contextCommandItem of contextCommandItems) {
-            const wsFolderName = path.basename(contextCommandItem.workspaceFolder)
-            if (contextCommandItem.type === 'file') {
-                filesCmd.children?.[0].commands.push({
-                    command: path.basename(contextCommandItem.relativePath),
-                    description: path.join(wsFolderName, contextCommandItem.relativePath),
-                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
-                    icon: 'file' as MynahIconsType,
-                })
+        // Look for files ending in .prompt in the workspace
+        const promptFiles = await vscode.workspace.findFiles('**/*.prompt', '**/node_modules/**')
 
-                // If file is a .prompt type, add to prompts list
-                if (contextCommandItem.relativePath.endsWith('.prompt')) {
-                    promptsCmd.children?.[0].commands.push({
-                        command: path.basename(contextCommandItem.relativePath, '.prompt'),
-                        route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
-                        icon: 'magic' as MynahIconsType,
-                    })
-                }
-            } else {
-                folderCmd.children?.[0].commands.push({
-                    command: path.basename(contextCommandItem.relativePath),
-                    description: path.join(wsFolderName, contextCommandItem.relativePath),
-                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
-                    icon: 'folder' as MynahIconsType,
-                })
-            }
+        if (promptFiles.length > 0) {
+            const promptCommands = promptFiles.map((file) => ({
+                command: path.basename(file.path, '.prompt'),
+                icon: 'magic' as MynahIconsType,
+                route: [path.dirname(file.path), path.basename(file.path)],
+            }))
+
+            promptsCmd.children?.[0].commands.push(...promptCommands)
         }
 
         // Check ~/.aws/prompts for saved prompts
@@ -510,6 +487,33 @@ export class ChatController {
 
         // Add create prompt button to the bottom of the prompts list
         promptsCmd.children?.[0].commands.push({ command: createPromptCommand, icon: 'list-add' as MynahIconsType })
+
+        const lspClientReady = await LspClient.instance.waitUntilReady()
+        if (!lspClientReady) {
+            return
+        }
+        const contextCommandItems = await LspClient.instance.getContextCommandItems()
+        const folderCmd: QuickActionCommand = contextCommand[0].commands?.[1]
+        const filesCmd: QuickActionCommand = contextCommand[0].commands?.[2]
+
+        for (const contextCommandItem of contextCommandItems) {
+            const wsFolderName = path.basename(contextCommandItem.workspaceFolder)
+            if (contextCommandItem.type === 'file') {
+                filesCmd.children?.[0].commands.push({
+                    command: path.basename(contextCommandItem.relativePath),
+                    description: path.join(wsFolderName, contextCommandItem.relativePath),
+                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
+                    icon: 'file' as MynahIconsType,
+                })
+            } else {
+                folderCmd.children?.[0].commands.push({
+                    command: path.basename(contextCommandItem.relativePath),
+                    description: path.join(wsFolderName, contextCommandItem.relativePath),
+                    route: [contextCommandItem.workspaceFolder, contextCommandItem.relativePath],
+                    icon: 'folder' as MynahIconsType,
+                })
+            }
+        }
 
         this.messenger.sendContextCommandData(contextCommand)
     }
