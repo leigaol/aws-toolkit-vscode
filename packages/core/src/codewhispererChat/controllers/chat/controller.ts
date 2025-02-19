@@ -66,7 +66,7 @@ import { waitUntil } from '../../../shared/utilities/timeoutUtils'
 import { MynahIconsType, MynahUIDataModel, QuickActionCommand } from '@aws/mynah-ui'
 import { LspClient } from '../../../amazonq/lsp/lspClient'
 import { ContextCommandItem } from '../../../amazonq/lsp/types'
-import { createPromptCommand, promptFileExtension, workspaceCommand } from '../../../amazonq/webview/ui/tabs/constants'
+import { createPromptCommand, workspaceCommand } from '../../../amazonq/webview/ui/tabs/constants'
 import fs from '../../../shared/fs/fs'
 import * as vscode from 'vscode'
 import { FeatureConfigProvider, Features } from '../../../shared/featureConfig'
@@ -120,6 +120,12 @@ export interface ChatControllerMessageListeners {
     readonly processContextSelected: MessageListener<ContextSelectedMessage>
     readonly processFileClick: MessageListener<FileClick>
 }
+
+const promptFileExtension = '.prompt'
+
+const additionalContentInnerContextLimit = 8192
+
+const aditionalContentNameLimit = 1024
 
 export class ChatController {
     private readonly sessionStorage: ChatSessionStorage
@@ -886,9 +892,9 @@ export class ChatController {
                 // Todo: add mechanism for sorting/prioritization of additional context
                 if (triggerPayload.additionalContents.length < 20) {
                     triggerPayload.additionalContents.push({
-                        name: prompt.name.substring(0, 1024),
-                        description: prompt.description.substring(0, 1024),
-                        innerContext: prompt.content.substring(0, 8192),
+                        name: prompt.name.substring(0, aditionalContentNameLimit),
+                        description: prompt.description.substring(0, aditionalContentNameLimit),
+                        innerContext: prompt.content.substring(0, additionalContentInnerContextLimit),
                     })
                 }
             }
