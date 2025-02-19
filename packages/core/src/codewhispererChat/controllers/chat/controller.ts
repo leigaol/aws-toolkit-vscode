@@ -30,6 +30,7 @@ import {
     QuickCommandGroupActionClick,
     MergedRelevantDocument,
     FileClick,
+    RelevantTextDocumentAddition,
 } from './model'
 import {
     AppToWebViewMessageDispatcher,
@@ -43,7 +44,7 @@ import { EditorContextCommand } from '../../commands/registerCommands'
 import { PromptsGenerator } from './prompts/promptsGenerator'
 import { TriggerEventsStorage } from '../../storages/triggerEvents'
 import { SendMessageRequest } from '@amzn/amazon-q-developer-streaming-client'
-import { CodeWhispererStreamingServiceException, RelevantTextDocument } from '@amzn/codewhisperer-streaming'
+import { CodeWhispererStreamingServiceException } from '@amzn/codewhisperer-streaming'
 import { UserIntentRecognizer } from './userIntent/userIntentRecognizer'
 import { CWCTelemetryHelper, recordTelemetryChatRunCommand } from './telemetryHelper'
 import { CodeWhispererTracker } from '../../../codewhisperer/tracker/codewhispererTracker'
@@ -589,6 +590,8 @@ export class ChatController {
         if (!lineRanges) {
             return
         }
+
+        // TODO: Fix for multiple workspace setup
         const projectRoot = workspace.workspaceFolders?.[0]?.uri.fsPath
         if (!projectRoot) {
             return
@@ -601,15 +604,25 @@ export class ChatController {
         const editor = await window.showTextDocument(document, ViewColumn.Active)
 
         // Create multiple selections based on line ranges
-        const selections: Selection[] = lineRanges.map(({ first, second }) => {
-            const startPosition = new Position(first - 1, 0) // Convert 1-based to 0-based
-            const endPosition = new Position(second - 1, document.lineAt(second - 1).range.end.character)
-            return new Selection(startPosition.line, startPosition.character, endPosition.line, endPosition.character)
-        })
+        const selections: Selection[] = lineRanges
+            .filter(({ first, second }) => first !== -1 && second !== -1)
+            .map(({ first, second }) => {
+                const startPosition = new Position(first - 1, 0) // Convert 1-based to 0-based
+                const endPosition = new Position(second - 1, document.lineAt(second - 1).range.end.character)
+                return new Selection(
+                    startPosition.line,
+                    startPosition.character,
+                    endPosition.line,
+                    endPosition.character
+                )
+            })
 
         // Apply multiple selections to the editor using the new API
-        editor.selection = selections[0] // Set the first selection as active
-        editor.selections = selections // Apply multiple selections
+        if (selections.length > 0) {
+            editor.selection = selections[0] // Set the first selection as active
+            editor.selections = selections // Apply multiple selections
+            editor.revealRange(selections[0], vscode.TextEditorRevealType.InCenter)
+        }
     }
 
     private processException(e: any, tabID: string) {
@@ -857,11 +870,12 @@ export class ChatController {
         this.messenger.sendStaticTextResponse(responseType, triggerID, tabID)
     }
 
-    private async resolveContextCommandPayload(triggerPayload: TriggerPayload) {
+    private async resolveContextCommandPayload(triggerPayload: TriggerPayload): Promise<string[]> {
         if (triggerPayload.context === undefined || triggerPayload.context.length === 0) {
-            return
+            return []
         }
         const contextCommands: ContextCommandItem[] = []
+        const relativePaths: string[] = []
         for (const context of triggerPayload.context) {
             if (typeof context !== 'string' && context.route && context.route.length === 2) {
                 contextCommands.push({
@@ -869,10 +883,12 @@ export class ChatController {
                     type: context.icon === 'folder' ? 'folder' : 'file',
                     relativePath: context.route?.[1] || '',
                 })
+                relativePaths.push(context.route[1])
+                console.log(context.route[1])
             }
         }
         if (contextCommands.length === 0) {
-            return
+            return []
         }
         const prompts = await LspClient.instance.getContextCommandPrompt(contextCommands)
         if (prompts.length > 0) {
@@ -888,6 +904,7 @@ export class ChatController {
                 `Retrieved chunks of additional context count: ${triggerPayload.additionalContents.length} `
             )
         }
+        return relativePaths
     }
 
     private async generateResponse(
@@ -923,7 +940,7 @@ export class ChatController {
             return
         }
 
-        await this.resolveContextCommandPayload(triggerPayload)
+        const relativePaths = await this.resolveContextCommandPayload(triggerPayload)
         // TODO: resolve the context into real context up to 90k
         triggerPayload.useRelevantDocuments = false
         if (triggerPayload.message) {
@@ -974,11 +991,24 @@ export class ChatController {
 
         session.currentContextId++
         session.contexts.set(session.currentContextId, new Map())
-        if (triggerPayload.mergedRelevantDocuments) {
-            for (const doc of triggerPayload.mergedRelevantDocuments) {
-                const currentContext = session.contexts.get(session.currentContextId)
-                if (currentContext) {
-                    currentContext.set(doc.relativeFilePath, doc.lineRanges)
+        if (triggerPayload.mergedRelevantDocuments !== undefined) {
+            const relativePathsOfMergedRelevantDocuments = triggerPayload.mergedRelevantDocuments.map(
+                (doc) => doc.relativeFilePath
+            )
+            for (const relativePath of relativePaths) {
+                if (!relativePathsOfMergedRelevantDocuments.includes(relativePath)) {
+                    triggerPayload.mergedRelevantDocuments.push({
+                        relativeFilePath: relativePath,
+                        lineRanges: [{ first: -1, second: -1 }],
+                    })
+                }
+            }
+            if (triggerPayload.mergedRelevantDocuments) {
+                for (const doc of triggerPayload.mergedRelevantDocuments) {
+                    const currentContext = session.contexts.get(session.currentContextId)
+                    if (currentContext) {
+                        currentContext.set(doc.relativeFilePath, doc.lineRanges)
+                    }
                 }
             }
         }
@@ -1023,7 +1053,7 @@ export class ChatController {
     }
 
     private mergeRelevantTextDocuments(
-        documents: RelevantTextDocument[] | undefined
+        documents: RelevantTextDocumentAddition[] | undefined
     ): MergedRelevantDocument[] | undefined {
         if (documents === undefined) {
             return undefined
