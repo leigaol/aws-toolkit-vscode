@@ -567,6 +567,7 @@ export class ChatController {
 
                 const title = message.action.formItemValues?.['prompt-name']
                 const newFilePath = path.join(promptsDirectory, title ? `${title}.prompt` : 'default.prompt')
+                await LspClient.instance.updateIndex([newFilePath], 'add')
                 const newFileContent = new Uint8Array(Buffer.from(''))
                 await fs.writeFile(newFilePath, newFileContent)
                 const newFileDoc = await vscode.workspace.openTextDocument(newFilePath)
