@@ -884,11 +884,11 @@ export class ChatController {
             triggerPayload.additionalContents = []
             for (const prompt of prompts) {
                 // Todo: add mechanism for sorting/prioritization of additional context
-                if (triggerPayload.additionalContents.length < 20 && prompt.content.length < 8000) {
+                if (triggerPayload.additionalContents.length < 20) {
                     triggerPayload.additionalContents.push({
-                        name: prompt.name,
-                        description: prompt.description,
-                        innerContext: prompt.content,
+                        name: prompt.name.substring(0, 1024),
+                        description: prompt.description.substring(0, 1024),
+                        innerContext: prompt.content.substring(0, 8192),
                     })
                 }
             }
