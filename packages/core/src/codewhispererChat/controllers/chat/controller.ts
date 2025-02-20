@@ -524,8 +524,7 @@ export class ChatController {
                     mandatory: true,
                     title: 'Prompt name',
                     placeholder: 'Enter prompt name',
-                    description:
-                        'Use this prompt in the chat by typing `@` followed by the prompt name. Prompt will be saved in ~/.aws/amazonq/prompts.',
+                    description: `Use this prompt by typing \`@\` followed by the prompt name. Prompt will be saved in ${getUserPromptsDirectory()}.`,
                 },
             ],
             [
