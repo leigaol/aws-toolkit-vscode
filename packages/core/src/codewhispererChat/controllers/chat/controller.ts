@@ -868,6 +868,7 @@ export class ChatController {
         const contextCommands: ContextCommandItem[] = []
         const relativePaths: string[] = []
 
+        // Check for workspace rules to add to context
         const workspaceRules = await vscode.workspace.findFiles(`.amazonq/rules/*${promptFileExtension}`)
         if (workspaceRules.length > 0) {
             contextCommands.push(
@@ -883,6 +884,7 @@ export class ChatController {
             )
         }
 
+        // Add context commands added by user to context
         if (triggerPayload.context !== undefined && triggerPayload.context.length > 0) {
             for (const context of triggerPayload.context) {
                 // todo: add handling of 'prompt' type (dependent on LSP changes)
@@ -911,6 +913,7 @@ export class ChatController {
                         innerContext: prompt.content.substring(0, additionalContentInnerContextLimit),
                     })
                     let relativePath = path.relative(workspaceFolder, prompt.filePath)
+                    // Handle user prompts outside the workspace
                     if (prompt.filePath.startsWith(getUserPromptsDirectory())) {
                         relativePath = path.basename(prompt.filePath)
                     }
