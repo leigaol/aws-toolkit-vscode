@@ -123,6 +123,18 @@ export async function startLanguageServer(extensionContext: vscode.ExtensionCont
             }),
             AuthUtil.instance.auth.onDidDeleteConnection(async () => {
                 client.sendNotification(notificationTypes.deleteBearerToken.method)
+            }),
+            vscode.workspace.onDidCreateFiles((e) => {
+                client.sendNotification('workspace/didCreateFiles', { files: e })
+            }),
+            vscode.workspace.onDidDeleteFiles((e) => {
+                client.sendNotification('workspace/didDeleteFiles', { files: e })
+            }),
+            vscode.workspace.onDidRenameFiles((e) => {
+                client.sendNotification('workspace/didRenameFiles', { files: e })
+            }),
+            vscode.workspace.onDidSaveTextDocument((e) => {
+                client.sendNotification('workspace/didSaveTextDocument', { textDocument: e })
             })
         )
     })
