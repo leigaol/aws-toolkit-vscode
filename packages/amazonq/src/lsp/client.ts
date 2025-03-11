@@ -78,24 +78,6 @@ export async function startLanguageServer(extensionContext: vscode.ExtensionCont
                 providesBearerToken: true,
             },
         },
-        // Specify uriConverters
-        uriConverters: {
-            // Convert VS Code URI to server URI
-            code2Protocol: (uri: vscode.Uri): string => {
-                // Example conversions:
-                // For Windows paths
-                if (process.platform === 'win32') {
-                    return uri.toString().replace('file:///', '')
-                }
-                // For Unix-like paths
-                return uri.toString().replace('file://', '')
-            },
-
-            // Convert server URI to VS Code URI
-            protocol2Code: (uri: string): vscode.Uri => {
-                return vscode.Uri.parse(uri)
-            },
-        },
         /**
          * When the trace server is enabled it outputs a ton of log messages so:
          *   When trace server is enabled, logs go to a seperate "Amazon Q Language Server" output.
