@@ -10,7 +10,13 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient'
 import { registerInlineCompletion } from '../app/inline/completion'
 import { AmazonQLspAuth, encryptionKey, notificationTypes } from './auth'
 import { AuthUtil } from 'aws-core-vscode/codewhisperer'
-import { ConnectionMetadata } from '@aws/language-server-runtimes/protocol'
+import {
+    ConnectionMetadata,
+    CreateFilesParams,
+    DeleteFilesParams,
+    DidSaveTextDocumentParams,
+    RenameFilesParams,
+} from '@aws/language-server-runtimes/protocol'
 import {
     ResourcePaths,
     Settings,
@@ -125,16 +131,32 @@ export async function startLanguageServer(extensionContext: vscode.ExtensionCont
                 client.sendNotification(notificationTypes.deleteBearerToken.method)
             }),
             vscode.workspace.onDidCreateFiles((e) => {
-                client.sendNotification('workspace/didCreateFiles', { files: e })
+                client.sendNotification('workspace/didCreateFiles', {
+                    files: e.files.map((it) => {
+                        return { uri: it.fsPath }
+                    }),
+                } as CreateFilesParams)
             }),
             vscode.workspace.onDidDeleteFiles((e) => {
-                client.sendNotification('workspace/didDeleteFiles', { files: e })
+                client.sendNotification('workspace/didDeleteFiles', {
+                    files: e.files.map((it) => {
+                        return { uri: it.fsPath }
+                    }),
+                } as DeleteFilesParams)
             }),
             vscode.workspace.onDidRenameFiles((e) => {
-                client.sendNotification('workspace/didRenameFiles', { files: e })
+                client.sendNotification('workspace/didRenameFiles', {
+                    files: e.files.map((it) => {
+                        return { oldUri: it.oldUri.fsPath, newUri: it.newUri.fsPath }
+                    }),
+                } as RenameFilesParams)
             }),
             vscode.workspace.onDidSaveTextDocument((e) => {
-                client.sendNotification('workspace/didSaveTextDocument', { textDocument: e })
+                client.sendNotification('workspace/didSaveTextDocument', {
+                    textDocument: {
+                        uri: e.uri.fsPath,
+                    },
+                } as DidSaveTextDocumentParams)
             })
         )
     })
