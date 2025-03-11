@@ -14,8 +14,10 @@ import {
     ConnectionMetadata,
     CreateFilesParams,
     DeleteFilesParams,
+    DidChangeWorkspaceFoldersParams,
     DidSaveTextDocumentParams,
     RenameFilesParams,
+    WorkspaceFolder,
 } from '@aws/language-server-runtimes/protocol'
 import {
     ResourcePaths,
@@ -175,6 +177,24 @@ export async function startLanguageServer(extensionContext: vscode.ExtensionCont
                         uri: e.uri.fsPath,
                     },
                 } as DidSaveTextDocumentParams)
+            }),
+            vscode.workspace.onDidChangeWorkspaceFolders((e) => {
+                client.sendNotification('workspace/didChangeWorkspaceFolder', {
+                    event: {
+                        added: e.added.map((it) => {
+                            return {
+                                name: it.name,
+                                uri: it.uri.fsPath,
+                            } as WorkspaceFolder
+                        }),
+                        removed: e.removed.map((it) => {
+                            return {
+                                name: it.name,
+                                uri: it.uri.fsPath,
+                            } as WorkspaceFolder
+                        }),
+                    },
+                } as DidChangeWorkspaceFoldersParams)
             })
         )
     })
