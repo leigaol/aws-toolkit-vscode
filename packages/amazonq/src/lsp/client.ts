@@ -6,11 +6,21 @@
 import vscode, { env, version } from 'vscode'
 import * as nls from 'vscode-nls'
 import * as crypto from 'crypto'
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient'
-import { InlineCompletionManager } from '../app/inline/completion'
+import { LanguageClient, LanguageClientOptions, RequestType } from 'vscode-languageclient'
+//import { InlineCompletionManager } from '../app/inline/completion'
 import { AmazonQLspAuth, encryptionKey, notificationTypes } from './auth'
 import { AuthUtil } from 'aws-core-vscode/codewhisperer'
-import { ConnectionMetadata } from '@aws/language-server-runtimes/protocol'
+import {
+    ConnectionMetadata,
+    CreateFilesParams,
+    DeleteFilesParams,
+    DidChangeWorkspaceFoldersParams,
+    DidSaveTextDocumentParams,
+    GetConfigurationFromServerParams,
+    RenameFilesParams,
+    ResponseMessage,
+    WorkspaceFolder,
+} from '@aws/language-server-runtimes/protocol'
 import { Settings, oidcClientName, createServerOptions, globals, Experiments, getLogger } from 'aws-core-vscode/shared'
 import { activate } from './chat/activation'
 import { AmazonQResourcePaths } from './lspInstaller'
@@ -94,8 +104,8 @@ export async function startLanguageServer(
 
     return client.onReady().then(async () => {
         await auth.init()
-        const inlineManager = new InlineCompletionManager(client)
-        inlineManager.registerInlineCompletion()
+        //const inlineManager = new InlineCompletionManager(client)
+        //inlineManager.registerInlineCompletion()
         if (Experiments.instance.get('amazonqChatLSP', false)) {
             activate(client, encryptionKey, resourcePaths.mynahUI)
         }
@@ -117,7 +127,7 @@ export async function startLanguageServer(
                 getLogger('amazonqLsp').error('Unable to update bearer token: %s', (e as Error).message)
                 clearInterval(authInterval)
             }
-        }, 300000) // every 5 minutes
+        }, 30 * 1000) // every 30 seconds
 
         toDispose.push(
             AuthUtil.instance.auth.onDidChangeActiveConnection(async () => {
@@ -126,7 +136,62 @@ export async function startLanguageServer(
             AuthUtil.instance.auth.onDidDeleteConnection(async () => {
                 client.sendNotification(notificationTypes.deleteBearerToken.method)
             }),
-            inlineManager
+            vscode.commands.registerCommand('aws.amazonq.getWorkspaceId', async () => {
+                const requestType = new RequestType<GetConfigurationFromServerParams, ResponseMessage, Error>(
+                    'aws/getConfigurationFromServer'
+                )
+                const workspaceIdResp = await client.sendRequest(requestType.method, {
+                    section: 'aws.q.workspaceContext',
+                })
+                return workspaceIdResp
+            }),
+            vscode.workspace.onDidCreateFiles((e) => {
+                client.sendNotification('workspace/didCreateFiles', {
+                    files: e.files.map((it) => {
+                        return { uri: it.fsPath }
+                    }),
+                } as CreateFilesParams)
+            }),
+            vscode.workspace.onDidDeleteFiles((e) => {
+                client.sendNotification('workspace/didDeleteFiles', {
+                    files: e.files.map((it) => {
+                        return { uri: it.fsPath }
+                    }),
+                } as DeleteFilesParams)
+            }),
+            vscode.workspace.onDidRenameFiles((e) => {
+                client.sendNotification('workspace/didRenameFiles', {
+                    files: e.files.map((it) => {
+                        return { oldUri: it.oldUri.fsPath, newUri: it.newUri.fsPath }
+                    }),
+                } as RenameFilesParams)
+            }),
+            vscode.workspace.onDidSaveTextDocument((e) => {
+                client.sendNotification('workspace/didSaveTextDocument', {
+                    textDocument: {
+                        uri: e.uri.fsPath,
+                    },
+                } as DidSaveTextDocumentParams)
+            }),
+            vscode.workspace.onDidChangeWorkspaceFolders((e) => {
+                client.sendNotification('workspace/didChangeWorkspaceFolder', {
+                    event: {
+                        added: e.added.map((it) => {
+                            return {
+                                name: it.name,
+                                uri: it.uri.fsPath,
+                            } as WorkspaceFolder
+                        }),
+                        removed: e.removed.map((it) => {
+                            return {
+                                name: it.name,
+                                uri: it.uri.fsPath,
+                            } as WorkspaceFolder
+                        }),
+                    },
+                } as DidChangeWorkspaceFoldersParams)
+            })
+            //inlineManager
         )
     })
 }
