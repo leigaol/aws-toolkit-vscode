@@ -26,9 +26,11 @@ import { getLogger } from '../../shared/logger/logger'
 import { session } from './codeWhispererSession'
 import { CodeWhispererSupplementalContext } from '../models/model'
 import { FeatureConfigProvider } from '../../shared/featureConfig'
-import { CodeScanRemediationsEventType } from '../client/codewhispereruserclient'
+import CodeWhispererUserClient, { CodeScanRemediationsEventType } from '../client/codewhispereruserclient'
 import { CodeAnalysisScope as CodeAnalysisScopeClientSide } from '../models/constants'
 import { Session } from '../../amazonqTest/chat/session/session'
+import { sleep } from '../../shared/utilities/timeoutUtils'
+import { getDiagnosticsDifferences, getDiagnosticsOfCurrentFile, toIdeDiagnostics } from './diagnosticsUtil'
 
 export class TelemetryHelper {
     // Some variables for client component latency
@@ -419,45 +421,53 @@ export class TelemetryHelper {
             e2eLatency = 0.0
         }
 
-        client
-            .sendTelemetryEvent({
-                telemetryEvent: {
-                    userTriggerDecisionEvent: {
-                        sessionId: sessionId,
-                        requestId: this.sessionDecisions[0].codewhispererFirstRequestId,
-                        customizationArn: selectedCustomization.arn === '' ? undefined : selectedCustomization.arn,
-                        programmingLanguage: {
-                            languageName: runtimeLanguageContext.toRuntimeLanguage(
-                                this.sessionDecisions[0].codewhispererLanguage
-                            ),
-                        },
-                        completionType: this.getSendTelemetryCompletionType(aggregatedCompletionType),
-                        suggestionState: this.getSendTelemetrySuggestionState(aggregatedSuggestionState),
-                        recommendationLatencyMilliseconds: e2eLatency,
-                        triggerToResponseLatencyMilliseconds: session.timeToFirstRecommendation,
-                        perceivedLatencyMilliseconds: session.perceivedLatency,
-                        timestamp: new Date(Date.now()),
-                        suggestionReferenceCount: referenceCount,
-                        generatedLine: generatedLines,
-                        numberOfRecommendations: suggestionCount,
-                        acceptedCharacterCount: acceptedRecommendationContent.length,
-                    },
-                },
-            })
-            .then()
-            .catch((error) => {
-                let requestId: string | undefined
-                if (isAwsError(error)) {
-                    requestId = error.requestId
-                }
-
-                getLogger().debug(
-                    `Failed to sendTelemetryEvent to CodeWhisperer, requestId: ${requestId ?? ''}, message: ${
-                        error.message
-                    }`
-                )
-            })
+        let userTriggerDecisionEvent: CodeWhispererUserClient.UserTriggerDecisionEvent = {
+            sessionId: sessionId,
+            requestId: this.sessionDecisions[0].codewhispererFirstRequestId,
+            customizationArn: selectedCustomization.arn === '' ? undefined : selectedCustomization.arn,
+            programmingLanguage: {
+                languageName: runtimeLanguageContext.toRuntimeLanguage(this.sessionDecisions[0].codewhispererLanguage),
+            },
+            completionType: this.getSendTelemetryCompletionType(aggregatedCompletionType),
+            suggestionState: this.getSendTelemetrySuggestionState(aggregatedSuggestionState),
+            recommendationLatencyMilliseconds: e2eLatency,
+            triggerToResponseLatencyMilliseconds: session.timeToFirstRecommendation,
+            perceivedLatencyMilliseconds: session.perceivedLatency,
+            timestamp: new Date(Date.now()),
+            suggestionReferenceCount: referenceCount,
+            generatedLine: generatedLines,
+            numberOfRecommendations: suggestionCount,
+            acceptedCharacterCount: acceptedRecommendationContent.length,
+        }
         this.resetUserTriggerDecisionTelemetry()
+
+        const sendEvent = () =>
+            client
+                .sendTelemetryEvent({ telemetryEvent: { userTriggerDecisionEvent: userTriggerDecisionEvent } })
+                .catch((error) => {
+                    const requestId = isAwsError(error) ? error.requestId : undefined
+                    getLogger().debug(
+                        `Failed to sendTelemetryEvent to CodeWhisperer, requestId: ${requestId ?? ''}, message: ${error.message}`
+                    )
+                })
+
+        if (userTriggerDecisionEvent.suggestionState === 'ACCEPT') {
+            // wait 1 seconds for the user installed 3rd party LSP
+            // to update its diagnostics.
+            sleep(1000).then(() => {
+                const diagnosticDiff = getDiagnosticsDifferences(
+                    session.diagnosticsBeforeAccept,
+                    getDiagnosticsOfCurrentFile()
+                )
+                userTriggerDecisionEvent.addedIdeDiagnostics = diagnosticDiff.added.map((it) => toIdeDiagnostics(it))
+                userTriggerDecisionEvent.removedIdeDiagnostics = diagnosticDiff.removed.map((it) =>
+                    toIdeDiagnostics(it)
+                )
+                sendEvent()
+            })
+        } else {
+            sendEvent()
+        }
     }
 
     public getLastTriggerDecisionForClassifier() {
