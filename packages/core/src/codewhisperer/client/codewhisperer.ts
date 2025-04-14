@@ -21,19 +21,15 @@ import { session } from '../util/codeWhispererSession'
 import { getLogger } from '../../shared/logger/logger'
 import { indent } from '../../shared/utilities/textUtilities'
 import { getClientId, getOptOutPreference, getOperatingSystem } from '../../shared/telemetry/util'
-import { extensionVersion, getServiceEnvVarConfig } from '../../shared/vscode/env'
-import { DevSettings } from '../../shared/settings'
+import { extensionVersion } from '../../shared/vscode/env'
 import { CodeWhispererConfig } from '../models/model'
 
 const keepAliveHeader = 'keep-alive-codewhisperer'
 
 export function getCodewhispererConfig(): CodeWhispererConfig {
-    const clientConfig = AuthUtil.instance.regionProfileManager.clientConfig
     return {
-        ...DevSettings.instance.getServiceConfig('codewhispererService', clientConfig),
-
-        // Environment variable overrides
-        ...getServiceEnvVarConfig('codewhisperer', Object.keys(clientConfig)),
+        region: 'us-west-2',
+        endpoint: 'https://rts.gamma-us-west-2.codewhisperer.ai.aws.dev/',
     }
 }
 
