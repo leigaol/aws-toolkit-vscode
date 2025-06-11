@@ -36,11 +36,12 @@ export function isValidConfigSection(section: unknown): section is ConfigSection
 }
 
 export const defaultAmazonQLspConfig: ExtendedAmazonQLSPConfig = {
-    manifestUrl: 'https://aws-toolkit-language-servers.amazonaws.com/qAgenticChatServer/0/manifest.json',
+    manifestUrl: 'https://d3akiidp1wvqyg.cloudfront.net/qAgenticChatServer/0/manifest.json',
     supportedVersions: '1.*.*',
     id: 'AmazonQ', // used across IDEs for identifying global storage/local disk locations. Do not change.
     suppressPromptPrefix: 'amazonQ',
-    path: undefined,
+
+    path: undefined, // '/Volumes/workplace/aws-language-servers/app/aws-lsp-codewhisperer-runtimes/out/agent-standalone.js'
     ui: undefined,
 }
 
