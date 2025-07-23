@@ -133,6 +133,7 @@ export class InlineCompletionManager implements Disposable {
                 addedDiagnostics: diagnosticDiff.added.map((it) => toIdeDiagnostics(it)),
                 removedDiagnostics: diagnosticDiff.removed.map((it) => toIdeDiagnostics(it)),
             }
+            this.languageClient.info(`DBG: emit ACCEPT to Flare, sessionId ${sessionId}`)
             this.languageClient.sendNotification(this.logSessionResultMessageName, params)
             this.disposable.dispose()
             this.disposable = languages.registerInlineCompletionItemProvider(
@@ -190,6 +191,7 @@ export class InlineCompletionManager implements Disposable {
                     },
                 },
             }
+            this.languageClient.info(`DBG: Rej ${sessionId}`)
             this.languageClient.sendNotification(this.logSessionResultMessageName, params)
             // clear session manager states once rejected
             this.sessionManager.clear()
@@ -315,6 +317,9 @@ export class AmazonQInlineCompletionItemProvider implements InlineCompletionItem
                         },
                     },
                 }
+                this.languageClient.info(
+                    `DBG: REJECT ${prevSessionId}, item ${JSON.stringify(this.sessionManager.getActiveRecommendation())}`
+                )
                 this.languageClient.sendNotification(this.logSessionResultMessageName, params)
                 this.sessionManager.clear()
             }
@@ -382,6 +387,7 @@ ${itemLog}
                         },
                     },
                 }
+                this.languageClient.info(`DBG: DISCARD ${session.sessionId}`)
                 this.languageClient.sendNotification(this.logSessionResultMessageName, params)
                 this.sessionManager.clear()
                 return []

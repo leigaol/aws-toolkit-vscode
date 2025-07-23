@@ -139,6 +139,11 @@ export function registerLanguageServerEventListener(languageClient: LanguageClie
 
         if (telemetryName in telemetry) {
             languageClient.info(`[VSCode Telemetry] Emitting ${telemetryName} telemetry: ${JSON.stringify(e.data)}`)
+            if ('codewhispererSuggestionState' in e.data) {
+                languageClient.info(
+                    `DBG: codewhispererSuggestionState: ${e.data['codewhispererSuggestionState']}, sessionId ${e.data['codewhispererSessionId']}`
+                )
+            }
             telemetry[telemetryName as keyof TelemetryBase].emit(e.data)
         }
     })
