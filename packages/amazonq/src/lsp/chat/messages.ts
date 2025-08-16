@@ -145,12 +145,20 @@ export function registerLanguageServerEventListener(languageClient: LanguageClie
     languageClient.onTelemetry((e) => {
         const telemetryName: string = e.name
         languageClient.info(`[VSCode Telemetry] Emitting ${telemetryName} telemetry: ${JSON.stringify(e.data)}`)
+        if (telemetryName.includes(`userTrigger`)) {
+            console.log(JSON.stringify(e.data))
+            const sessionId = e.data['codewhispererSessionId']
+            const suggestionState = e.data['codewhispererSuggestionState']
+            void vscode.window.showInformationMessage(`State: ${suggestionState} \nSession id ${sessionId}`)
+        }
         try {
             // Flare is now the source of truth for metrics instead of depending on each IDE client and toolkit-common
             const metric = (telemetry as any).getMetric(telemetryName)
             metric?.emit(e.data)
         } catch (error) {
-            languageClient.warn(`[VSCode Telemetry] Failed to emit ${telemetryName}: ${error}`)
+            languageClient.error(
+                `[VSCode Telemetry] Failed to emit ${telemetryName} telemetry: ${(error as Error).message}`
+            )
         }
     })
 }
